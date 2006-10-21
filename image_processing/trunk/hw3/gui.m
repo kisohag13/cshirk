@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 17:06:02
+% Last Modified by GUIDE v2.5 21-Oct-2006 19:21:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -98,10 +98,12 @@ if (filename ~= 0)
     global hRadioPanTilt;
     global hRadioZoom;
     global hRadioRoll;
+    global hRadio4Param;
     set(hRadioTranslation,'Visible','On');
     set(hRadioPanTilt,'Visible','On');
     set(hRadioZoom,'Visible','On');
     set(hRadioRoll,'Visible','On');
+    set(hRadio4Param,'Visible','On');
     
     % Default to 'Translation' mode
     doRadioTranslation();    
@@ -460,11 +462,13 @@ global hRadioTranslation;
 global hRadioPanTilt;
 global hRadioZoom;
 global hRadioRoll;
+global hRadio4Param;
 
 set(hRadioTranslation,'Value',0);
 set(hRadioPanTilt,'Value',0);
 set(hRadioZoom,'Value',0);
 set(hRadioRoll,'Value',0);
+set(hRadio4Param,'Value',0);
 
 global hCameraTrack;
 global hCameraTrackLabel;
@@ -497,6 +501,16 @@ global hCameraRollLabel;
 
 set(hCameraRoll,'Visible','Off');
 set(hCameraRollLabel,'Visible','Off');
+
+global hC1Edit;
+global hC1Label;
+global hC2Edit;
+global hC2Label;
+
+set(hC1Edit,'Visible','Off');
+set(hC1Label,'Visible','Off');
+set(hC2Edit,'Visible','Off');
+set(hC2Label,'Visible','Off');
 
 
 
@@ -912,5 +926,128 @@ function cameraRollLabel_CreateFcn(hObject, eventdata, handles)
 
 global hCameraRollLabel;
 hCameraRollLabel = hObject;
+
+
+
+
+% --- Executes on button press in radio4Param.
+function radio4Param_Callback(hObject, eventdata, handles)
+% hObject    handle to radio4Param (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radio4Param
+
+radioTurnAllOff();
+
+% Set radio button -- got cleared by TurnAllOff function
+global hRadio4Param;
+set(hRadio4Param,'Value',1);
+
+% Enable controls...
+global hC1Edit;
+global hC1Label;
+global hC2Edit;
+global hC2Label;
+set(hC1Edit,'Visible','On');
+set(hC1Edit,'String','');
+set(hC1Label,'Visible','On');
+set(hC2Edit,'Visible','On');
+set(hC2Edit,'String','');
+set(hC2Label,'Visible','On');
+
+% Reset image
+global img;
+imshow(img);
+
+
+% --- Executes during object creation, after setting all properties.
+function radio4Param_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radio4Param (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hRadio4Param;
+hRadio4Param = hObject;
+
+
+
+function c1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to c1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of c1Edit as text
+%        str2double(get(hObject,'String')) returns contents of c1Edit as a double
+
+str2double(get(hObject,'String'))
+
+
+% --- Executes during object creation, after setting all properties.
+function c1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hC1Edit;
+hC1Edit = hObject;
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function c1Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c1Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hC1Label;
+hC1Label = hObject;
+
+
+
+
+function c2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to c2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of c2Edit as text
+%        str2double(get(hObject,'String')) returns contents of c2Edit as a double
+
+str2double(get(hObject,'String'))
+
+
+% --- Executes during object creation, after setting all properties.
+function c2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hC2Edit;
+hC2Edit = hObject;
+
+
+
+% --- Executes during object creation, after setting all properties.
+function c2Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c2Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hC2Label;
+hC2Label = hObject;
 
 
