@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 14:29:06
+% Last Modified by GUIDE v2.5 21-Oct-2006 17:06:02
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -97,9 +97,11 @@ if (filename ~= 0)
     global hRadioTranslation;
     global hRadioPanTilt;
     global hRadioZoom;
+    global hRadioRoll;
     set(hRadioTranslation,'Visible','On');
     set(hRadioPanTilt,'Visible','On');
     set(hRadioZoom,'Visible','On');
+    set(hRadioRoll,'Visible','On');
     
     % Default to 'Translation' mode
     doRadioTranslation();    
@@ -260,7 +262,6 @@ Ry = [cos(theta_y)   0   sin(theta_y)
       0              1   0
       -sin(theta_y)  0   cos(theta_y)];
 
-nExceed = 0;
 imgTmp = img; % Need to do this to get some kind of image metadata
 imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 
@@ -290,7 +291,6 @@ for j=1:h
     
     if ((x < 1) || (x > w) || (y < 1) || (y > h))
       % Out of bounds, so do nothing
-      nExceed = nExceed + 1;
     else
       imgTmp(y,x,1:d) = img(j,i,1:d);
     end
@@ -459,10 +459,12 @@ function radioTurnAllOff()
 global hRadioTranslation;
 global hRadioPanTilt;
 global hRadioZoom;
+global hRadioRoll;
 
 set(hRadioTranslation,'Value',0);
 set(hRadioPanTilt,'Value',0);
 set(hRadioZoom,'Value',0);
+set(hRadioRoll,'Value',0);
 
 global hCameraTrack;
 global hCameraTrackLabel;
@@ -489,6 +491,13 @@ global hCameraZoomLabel;
 
 set(hCameraZoom,'Visible','Off');
 set(hCameraZoomLabel,'Visible','Off');
+
+global hCameraRoll;
+global hCameraRollLabel;
+
+set(hCameraRoll,'Visible','Off');
+set(hCameraRollLabel,'Visible','Off');
+
 
 
 
@@ -619,8 +628,6 @@ global img2;
 global hCameraZoom;
 global hCameraZoomLabel;
 
-zoomSliderPos = get(hCameraZoom,'Value');
-
 [h,w,d] = size(img);
 
 % Range 0 to 1
@@ -642,7 +649,6 @@ j_offset = 0;
 
 % Need to combat the black grid artifacting when zooming in
 % So use two approaches, based on the zoom level
-nExceed = 0;
 if (zoomLevel > 1)
 
   % Iteriate over the zoomed image
@@ -657,7 +663,6 @@ if (zoomLevel > 1)
       
       if ((i < 1) || (i > w) || (j < 1) || (j > h))
         % Out of bounds, so do nothing
-        nExceed = nExceed + 1;
       else
         imgTmp(y,x,1:d) = img(j,i,1:d);
       end
@@ -676,7 +681,6 @@ else
      
       if ((x < 1) || (x > w) || (y < 1) || (y > h))
         % Out of bounds, so do nothing
-        nExceed = nExceed + 1;
       else
         imgTmp(y,x,1:d) = img(j,i,1:d);
       end
@@ -685,8 +689,6 @@ else
   end
 
 end
-
-sprintf('nExceed = %d', nExceed)
 
 % Save modified image
 img2 = imgTmp;
@@ -770,4 +772,107 @@ function cameraZoomLabel_CreateFcn(hObject, eventdata, handles)
 
 global hCameraZoomLabel;
 hCameraZoomLabel = hObject;
+
+
+
+% --- Executes on button press in radioRoll.
+function radioRoll_Callback(hObject, eventdata, handles)
+% hObject    handle to radioRoll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioRoll
+
+radioTurnAllOff();
+
+% Set radio button -- got cleared by TurnAllOff function
+global hRadioRoll;
+set(hRadioRoll,'Value',1);
+
+global hCameraRoll;
+global hCameraRollLabel;
+set(hCameraRoll,'Visible','On');
+set(hCameraRoll,'Value',.5);
+set(hCameraRollLabel,'Visible','On');
+
+% Reset image
+global img;
+imshow(img);
+
+
+% --- Executes during object creation, after setting all properties.
+function radioRoll_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radioRoll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hRadioRoll;
+hRadioRoll = hObject;
+
+
+
+% --- Camera Roll!
+function doCameraRoll()
+%
+
+global hCameraRoll;
+
+sliderPos = get(hCameraRoll,'Value');
+
+global img;
+[h,w,d] = size(img);
+
+imgTmp = img; % Need to do this to get some kind of image metadata
+imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+% Save modified image
+global img2;
+img2 = imgTmp;
+
+
+
+
+% --- Executes on slider movement.
+function cameraRoll_Callback(hObject, eventdata, handles)
+% hObject    handle to cameraRoll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+doCameraRoll();
+
+global img2;
+imshow(img2);
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function cameraRoll_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cameraRoll (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+global hCameraRoll;
+hCameraRoll = hObject;
+
+
+
+% --- Executes during object creation, after setting all properties.
+function cameraRollLabel_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to cameraRollLabel (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hCameraRollLabel;
+hCameraRollLabel = hObject;
+
 
