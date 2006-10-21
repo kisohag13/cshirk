@@ -265,9 +265,9 @@ Ry = [cos(theta_y)   0   sin(theta_y)
 imgTmp = img; % Need to do this to get some kind of image metadata
 imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 
-% In order to avoid rotating such that it looks like graph is
-% in the first quadrant -- make it so the axis is centrally
-% aligned w.r.t. the image
+% Make the image 'axis' so that manipulation is aligned to
+% the center of the image, and not the top-left...
+% which is quadrant 1 style..
 %
 % Compute x and y offsets by looking at extreme top,right pixel movements
 big_X = [w
@@ -829,6 +829,18 @@ imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 
 roll = [cos(theta_z) -sin(theta_z)
         sin(theta_z) cos(theta_z)];
+    
+% Make the image 'axis' so that manipulation is aligned to
+% the center of the image, and not the top-left...
+% which is quadrant 1 style..
+%
+% Compute x and y offsets by looking at extreme top,right pixel movements
+tmp_x = [w
+         h]; % z is irrelevant -- don't care
+
+tmp = roll * tmp_x;
+x_offset = floor((w - round(tmp(1))) / 2);
+y_offset = floor((h - round(tmp(2))) / 2);
 
 for j=1:h
   for i=1:w
@@ -837,8 +849,8 @@ for j=1:h
              j];
       
     tmp = roll * tmp_x;
-    x = round(tmp(1));
-    y = round(tmp(2));
+    x = round(tmp(1)) + x_offset;
+    y = round(tmp(2)) + y_offset;
     
     if ((x < 1) || (x > w) || (y < 1) || (y > h))
       % Out of bounds, so do nothing
