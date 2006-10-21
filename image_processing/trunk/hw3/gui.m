@@ -818,7 +818,8 @@ function doCameraRoll()
 global hCameraRoll;
 
 % Let angles vary from -180 degrees to +180 degrees
-rollSliderPos = get(hCameraRoll,'Value');
+% Also inverse the left-right convention to make it intuitive
+rollSliderPos = 1 - get(hCameraRoll,'Value');
 theta_z = 2 * pi * rollSliderPos - pi;
 
 global img;
@@ -835,24 +836,24 @@ roll = [cos(theta_z) -sin(theta_z)
 % which is quadrant 1 style..
 %
 % Compute x and y offsets by looking at extreme top,right pixel movements
-tmp_x = [w
+tmp_X = [w
          h]; % z is irrelevant -- don't care
 
-tmp = roll * tmp_x;
+tmp = roll * tmp_X;
 x_offset = floor((w - round(tmp(1))) / 2);
 y_offset = floor((h - round(tmp(2))) / 2);
 
-for j=1:h
-  for i=1:w
+for y=1:h
+  for x=1:w
       
-    tmp_x = [i
-             j];
+    tmp_X = [x
+             y];
       
-    tmp = roll * tmp_x;
-    x = round(tmp(1)) + x_offset;
-    y = round(tmp(2)) + y_offset;
+    tmp = roll * tmp_X;
+    i = round(tmp(1)) + x_offset;
+    j = round(tmp(2)) + y_offset;
     
-    if ((x < 1) || (x > w) || (y < 1) || (y > h))
+    if ((i < 1) || (i > w) || (j < 1) || (j > h))
       % Out of bounds, so do nothing
     else
       imgTmp(y,x,1:d) = img(j,i,1:d);
