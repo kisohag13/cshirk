@@ -633,21 +633,57 @@ zoomLevel = max(get(hCameraZoom,'Value') * 2, .02);
 imgTmp = img; % Need to do this to get some kind of image metadata
 imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 
+% Compute image offsets so that zooming is centered
+% Look at what happens to extreme top, right pixels
+x_offset = floor((w - w * zoomLevel) / 2);
+y_offset = floor((h - h * zoomLevel) / 2);
+i_offset = 0;
+j_offset = 0;
+
+% Need to combat the black grid artifacting when zooming in
+% So use two approaches, based on the zoom level
 nExceed = 0;
-for j=1:h
-  for i=1:w
+if (zoomLevel > 1)
+
+  % Iteriate over the zoomed image
+  for y=1:h
+    for x=1:w
+        
+      % To be honest, I am too rushed to think about
+      % why putting the offset / 2 in this context works...
+      % But it (appears to) work...
+      i = round(x / zoomLevel - y_offset / 2);
+      j = round(y / zoomLevel - y_offset / 2);
       
-    x = round(i * zoomLevel);
-    y = round(j * zoomLevel);
-     
-    if ((x < 1) || (x > w) || (y < 1) || (y > h))
-      % Out of bounds, so do nothing
-      nExceed = nExceed + 1;
-    else
-      imgTmp(y,x,1:d) = img(j,i,1:d);
+      if ((i < 1) || (i > w) || (j < 1) || (j > h))
+        % Out of bounds, so do nothing
+        nExceed = nExceed + 1;
+      else
+        imgTmp(y,x,1:d) = img(j,i,1:d);
+      end
+        
     end
-    
   end
+  
+else
+
+  % Iteriate over the source image
+  for j=1:h
+    for i=1:w
+      
+      x = round(i * zoomLevel) + x_offset;
+      y = round(j * zoomLevel) + y_offset;
+     
+      if ((x < 1) || (x > w) || (y < 1) || (y > h))
+        % Out of bounds, so do nothing
+        nExceed = nExceed + 1;
+      else
+        imgTmp(y,x,1:d) = img(j,i,1:d);
+      end
+    
+    end
+  end
+
 end
 
 sprintf('nExceed = %d', nExceed)
