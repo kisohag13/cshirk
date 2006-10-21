@@ -102,7 +102,7 @@ if (filename ~= 0)
     set(hRadioZoom,'Visible','On');
     
     % Default to 'Translation' mode
-    DoRadioTranslation();    
+    doRadioTranslation();    
        
 end
 
@@ -493,7 +493,7 @@ set(hCameraZoomLabel,'Visible','Off');
 
 
 % --- Radio Translation Helper
-function DoRadioTranslation()
+function doRadioTranslation()
 %
 
 % Enable translation controls
@@ -518,7 +518,7 @@ imshow(img);
 
 
 % --- Radio Pan/Tilt Helper
-function DoRadioPanTilt()
+function doRadioPanTilt()
 %
 
 % Enable Pan/Tilt controls
@@ -562,7 +562,7 @@ function radioTranslation_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of radioTranslation
 
 radioTurnAllOff();
-DoRadioTranslation();
+doRadioTranslation();
 
 
 % --- Executes during object creation, after setting all properties.
@@ -584,7 +584,7 @@ function radioPanTilt_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of radioPanTilt
 
 radioTurnAllOff();
-DoRadioPanTilt();
+doRadioPanTilt();
 
 
 % --- Executes during object creation, after setting all properties.
@@ -610,11 +610,8 @@ hCameraTiltLabel = hObject;
 % --- Zoom!
 function doCameraZoom()
 % Camera Zoom:
-%
-% [x'  = [F/F' x
-%  y']    F/F' y]       (5.5.6)
-%
-%
+%   [x'  = [F/F' x
+%    y']    F/F' y]       (5.5.6)
 %
 
 global img;
@@ -626,8 +623,39 @@ zoomSliderPos = get(hCameraZoom,'Value');
 
 [h,w,d] = size(img);
 
-global hCameraZoom;
-global hCameraZoomLabel;
+% Range 0 to 1
+% Nominal at .5
+% > .5? Magnify... F/F' > 1
+% < .5? Uhh.. demagnify.. F/F' < 1
+% Corner case will be when slider is zero... 
+zoomLevel = max(get(hCameraZoom,'Value') * 2, .02);
+
+imgTmp = img; % Need to do this to get some kind of image metadata
+imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+nExceed = 0;
+for j=1:h
+  for i=1:w
+      
+    x = round(i * zoomLevel);
+    y = round(j * zoomLevel);
+     
+    if ((x < 1) || (x > w) || (y < 1) || (y > h))
+      % Out of bounds, so do nothing
+      nExceed = nExceed + 1;
+    else
+      imgTmp(y,x,1:d) = img(j,i,1:d);
+    end
+    
+  end
+end
+
+sprintf('nExceed = %d', nExceed)
+
+% Save modified image
+img2 = imgTmp;
+
+
 
 
 
@@ -641,6 +669,7 @@ function radioZoom_Callback(hObject, eventdata, handles)
 
 radioTurnAllOff();
 
+% Set radio button -- got cleared by TurnAllOff function
 global hRadioZoom;
 set(hRadioZoom,'Value',1);
 
@@ -677,6 +706,9 @@ function cameraZoom_Callback(hObject, eventdata, handles)
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
 doCameraZoom();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
