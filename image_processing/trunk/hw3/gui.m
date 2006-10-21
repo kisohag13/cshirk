@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 19:21:31
+% Last Modified by GUIDE v2.5 21-Oct-2006 19:39:31
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -506,11 +506,19 @@ global hC1Edit;
 global hC1Label;
 global hC2Edit;
 global hC2Label;
+global hC3Edit;
+global hC3Label;
+global hC4Edit;
+global hC4Label;
 
 set(hC1Edit,'Visible','Off');
 set(hC1Label,'Visible','Off');
 set(hC2Edit,'Visible','Off');
 set(hC2Label,'Visible','Off');
+set(hC3Edit,'Visible','Off');
+set(hC3Label,'Visible','Off');
+set(hC4Edit,'Visible','Off');
+set(hC4Label,'Visible','Off');
 
 
 
@@ -928,6 +936,32 @@ global hCameraRollLabel;
 hCameraRollLabel = hObject;
 
 
+% --- 4-param!
+function do4Param()
+%
+
+global hC1Edit;
+global hC2Edit;
+global hC3Edit;
+global hC4Edit;
+
+global img;
+global img2;
+
+c1 = str2double(get(hC1Edit,'String'));
+c2 = str2double(get(hC2Edit,'String'));
+c3 = str2double(get(hC3Edit,'String'));
+c4 = str2double(get(hC4Edit,'String'));
+
+if ((c1 == NaN) || (c2 == NaN) || (c3 == NaN) || (c4 == NaN))
+  img2 = img;
+  return
+end
+
+% tmp hack...!!
+% Save modified image
+img2 = img;
+
 
 
 % --- Executes on button press in radio4Param.
@@ -949,12 +983,22 @@ global hC1Edit;
 global hC1Label;
 global hC2Edit;
 global hC2Label;
+global hC3Edit;
+global hC3Label;
+global hC4Edit;
+global hC4Label;
 set(hC1Edit,'Visible','On');
 set(hC1Edit,'String','');
 set(hC1Label,'Visible','On');
 set(hC2Edit,'Visible','On');
 set(hC2Edit,'String','');
 set(hC2Label,'Visible','On');
+set(hC3Edit,'Visible','On');
+set(hC3Edit,'String','');
+set(hC3Label,'Visible','On');
+set(hC4Edit,'Visible','On');
+set(hC4Edit,'String','');
+set(hC4Label,'Visible','On');
 
 % Reset image
 global img;
@@ -980,7 +1024,10 @@ function c1Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of c1Edit as text
 %        str2double(get(hObject,'String')) returns contents of c1Edit as a double
 
-str2double(get(hObject,'String'))
+do4Param();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1021,7 +1068,10 @@ function c2Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of c2Edit as text
 %        str2double(get(hObject,'String')) returns contents of c2Edit as a double
 
-str2double(get(hObject,'String'))
+do4Param();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1049,5 +1099,94 @@ function c2Label_CreateFcn(hObject, eventdata, handles)
 
 global hC2Label;
 hC2Label = hObject;
+
+
+
+
+
+function c3Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to c3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of c3Edit as text
+%        str2double(get(hObject,'String')) returns contents of c3Edit as a double
+
+do4Param();
+
+global img2;
+imshow(img2);
+
+
+% --- Executes during object creation, after setting all properties.
+function c3Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c3Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hC3Edit;
+hC3Edit = hObject;
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function c3Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c3Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hC3Label;
+hC3Label = hObject;
+
+
+
+
+% --- Executes during object creation, after setting all properties.
+function c4Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c4Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hC4Label;
+hC4Label = hObject;
+
+
+
+function c4Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to c4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of c4Edit as text
+%        str2double(get(hObject,'String')) returns contents of c4Edit as a double
+
+do4Param();
+
+global img2;
+imshow(img2);
+
+
+
+% --- Executes during object creation, after setting all properties.
+function c4Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to c4Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hC4Edit;
+hC4Edit = hObject;
 
 
