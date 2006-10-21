@@ -817,13 +817,38 @@ function doCameraRoll()
 
 global hCameraRoll;
 
-sliderPos = get(hCameraRoll,'Value');
+% Let angles vary from -180 degrees to +180 degrees
+rollSliderPos = get(hCameraRoll,'Value');
+theta_z = 2 * pi * rollSliderPos - pi;
 
 global img;
 [h,w,d] = size(img);
 
 imgTmp = img; % Need to do this to get some kind of image metadata
 imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+roll = [cos(theta_z) -sin(theta_z)
+        sin(theta_z) cos(theta_z)];
+
+for j=1:h
+  for i=1:w
+      
+    tmp_x = [i
+             j];
+      
+    tmp = roll * tmp_x;
+    x = round(tmp(1));
+    y = round(tmp(2));
+    
+    if ((x < 1) || (x > w) || (y < 1) || (y > h))
+      % Out of bounds, so do nothing
+    else
+      imgTmp(y,x,1:d) = img(j,i,1:d);
+    end
+    
+  end
+end
+
 
 % Save modified image
 global img2;
