@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 23:13:30
+% Last Modified by GUIDE v2.5 21-Oct-2006 23:46:22
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -523,6 +523,32 @@ set(hC3Edit,'Visible','Off');
 set(hC3Label,'Visible','Off');
 set(hC4Edit,'Visible','Off');
 set(hC4Label,'Visible','Off');
+
+global hA0Edit;
+global hA0Label;
+global hA1Edit;
+global hA1Label;
+global hA2Edit;
+global hA2Label;
+global hB0Edit;
+global hB0Label;
+global hB1Edit;
+global hB1Label;
+global hB2Edit;
+global hB2Label;
+
+set(hA0Edit,'Visible','Off');
+set(hA0Label,'Visible','Off');
+set(hA1Edit,'Visible','Off');
+set(hA1Label,'Visible','Off');
+set(hA2Edit,'Visible','Off');
+set(hA2Label,'Visible','Off');
+set(hB0Edit,'Visible','Off');
+set(hB0Label,'Visible','Off');
+set(hB1Edit,'Visible','Off');
+set(hB1Label,'Visible','Off');
+set(hB2Edit,'Visible','Off');
+set(hB2Label,'Visible','Off');
 
 
 
@@ -1293,6 +1319,18 @@ global hC1Edit;
 global hC1Label;
 global hC2Edit;
 global hC2Label;
+global hA0Edit;
+global hA0Label;
+global hA1Edit;
+global hA1Label;
+global hA2Edit;
+global hA2Label;
+global hB0Edit;
+global hB0Label;
+global hB1Edit;
+global hB1Label;
+global hB2Edit;
+global hB2Label;
 
 set(hC1Edit,'Visible','On');
 set(hC1Edit,'String','');
@@ -1300,6 +1338,24 @@ set(hC1Label,'Visible','On');
 set(hC2Edit,'Visible','On');
 set(hC2Edit,'String','');
 set(hC2Label,'Visible','On');
+set(hA0Edit,'Visible','On');
+set(hA0Edit,'String','');
+set(hA0Label,'Visible','On');
+set(hA1Edit,'Visible','On');
+set(hA1Edit,'String','');
+set(hA1Label,'Visible','On');
+set(hA2Edit,'Visible','On');
+set(hA2Edit,'String','');
+set(hA2Label,'Visible','On');
+set(hB0Edit,'Visible','On');
+set(hB0Edit,'String','');
+set(hB0Label,'Visible','On');
+set(hB1Edit,'Visible','On');
+set(hB1Edit,'String','');
+set(hB1Label,'Visible','On');
+set(hB2Edit,'Visible','On');
+set(hB2Edit,'String','');
+set(hB2Label,'Visible','On');
 
 
 
@@ -1312,3 +1368,223 @@ function radioProjective_CreateFcn(hObject, eventdata, handles)
 global hRadioProjective;
 hRadioProjective = hObject;
 
+
+
+
+function a0Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to a0Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of a0Edit as text
+%        str2double(get(hObject,'String')) returns contents of a0Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function a0Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a0Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hA0Edit;
+hA0Edit = hObject;
+
+
+% --- Executes during object creation, after setting all properties.
+function a0Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a0Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hA0Label;
+hA0Label = hObject;
+
+
+
+function a1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to a1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of a1Edit as text
+%        str2double(get(hObject,'String')) returns contents of a1Edit as a
+%        double
+
+
+% --- Executes during object creation, after setting all properties.
+function a1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hA1Edit;
+hA1Edit = hObject;
+
+
+
+function a2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to a2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of a2Edit as text
+%        str2double(get(hObject,'String')) returns contents of a2Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function a2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hA2Edit;
+hA2Edit = hObject;
+
+
+% --- Executes during object creation, after setting all properties.
+function a1Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a1Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hA1Label;
+hA1Label = hObject;
+
+
+% --- Executes during object creation, after setting all properties.
+function a2Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to a2Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hA2Label;
+hA2Label = hObject;
+
+
+
+function b0Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to b0Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of b0Edit as text
+%        str2double(get(hObject,'String')) returns contents of b0Edit as a
+%        double
+
+
+% --- Executes during object creation, after setting all properties.
+function b0Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b0Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hB0Edit;
+hB0Edit = hObject;
+
+
+
+function b1Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to b1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of b1Edit as text
+%        str2double(get(hObject,'String')) returns contents of b1Edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function b1Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b1Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hB1Edit;
+hB1Edit = hObject;
+
+
+
+function b2Edit_Callback(hObject, eventdata, handles)
+% hObject    handle to b2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of b2Edit as text
+%        str2double(get(hObject,'String')) returns contents of b2Edit as a double
+
+
+
+% --- Executes during object creation, after setting all properties.
+function b2Edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b2Edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+global hB2Edit;
+hB2Edit = hObject;
+
+
+% --- Executes during object creation, after setting all properties.
+function b1Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b1Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hB1Label;
+hB1Label = hObject;
+
+
+
+% --- Executes during object creation, after setting all properties.
+function b2Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b2Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hB2Label;
+hB2Label = hObject;
+
+
+% --- Executes during object creation, after setting all properties.
+function b0Label_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to b0Label (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hB0Label;
+hB0Label = hObject;
