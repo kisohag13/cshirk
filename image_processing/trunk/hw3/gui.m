@@ -1363,12 +1363,9 @@ imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 nExceed = 0;
 for j=1:h
   for i=1:w
-      
-    if ((1 + c1 * i + c2 * j) == 0)
-      continue
-    end
     
-    if ((1 + c1 * i + c2 * j) == 0)
+    % Avoid divide by zero issues
+    if (((1 + c1 * i + c2 * j) == 0) || ((1 + c1 * i + c2 * j) == 0))
       continue
     end
   
