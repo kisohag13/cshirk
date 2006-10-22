@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 21:41:54
+% Last Modified by GUIDE v2.5 21-Oct-2006 23:13:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -99,11 +99,13 @@ if (filename ~= 0)
     global hRadioZoom;
     global hRadioRoll;
     global hRadio4Param;
+    global hRadioProjective;
     set(hRadioTranslation,'Visible','On');
     set(hRadioPanTilt,'Visible','On');
     set(hRadioZoom,'Visible','On');
     set(hRadioRoll,'Visible','On');
     set(hRadio4Param,'Visible','On');
+    set(hRadioProjective,'Visible','On');
     
     % Default to 'Translation' mode
     doRadioTranslation();    
@@ -463,12 +465,14 @@ global hRadioPanTilt;
 global hRadioZoom;
 global hRadioRoll;
 global hRadio4Param;
+global hRadioProjective;
 
 set(hRadioTranslation,'Value',0);
 set(hRadioPanTilt,'Value',0);
 set(hRadioZoom,'Value',0);
 set(hRadioRoll,'Value',0);
 set(hRadio4Param,'Value',0);
+set(hRadioProjective,'Value',0);
 
 global hCameraTrack;
 global hCameraTrackLabel;
@@ -1268,3 +1272,43 @@ global hLoadImage;
 hLoadImage = hObject;
 
 get(hLoadImage,'String')
+
+
+% --- Executes on button press in radioProjective.
+function radioProjective_Callback(hObject, eventdata, handles)
+% hObject    handle to radioProjective (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioProjective
+
+radioTurnAllOff();
+
+% Set radio button -- got cleared by TurnAllOff function
+global hRadioProjective;
+set(hRadioProjective,'Value',1);
+
+% Enable controls...
+global hC1Edit;
+global hC1Label;
+global hC2Edit;
+global hC2Label;
+
+set(hC1Edit,'Visible','On');
+set(hC1Edit,'String','');
+set(hC1Label,'Visible','On');
+set(hC2Edit,'Visible','On');
+set(hC2Edit,'String','');
+set(hC2Label,'Visible','On');
+
+
+
+% --- Executes during object creation, after setting all properties.
+function radioProjective_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radioProjective (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hRadioProjective;
+hRadioProjective = hObject;
+
