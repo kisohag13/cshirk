@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 19:39:31
+% Last Modified by GUIDE v2.5 21-Oct-2006 21:41:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -866,6 +866,7 @@ x_offset = floor((w - round(tmp(1))) / 2);
 y_offset = floor((h - round(tmp(2))) / 2);
 
 for y=1:h
+  showBusy(100 * (y-1) / h);
   for x=1:w
       
     tmp_X = [x
@@ -883,6 +884,7 @@ for y=1:h
     
   end
 end
+showBusy(0);
 
 
 % Save modified image
@@ -947,20 +949,61 @@ global hC4Edit;
 
 global img;
 global img2;
+[h,w,d] = size(img);
 
 c1 = str2double(get(hC1Edit,'String'));
 c2 = str2double(get(hC2Edit,'String'));
 c3 = str2double(get(hC3Edit,'String'));
 c4 = str2double(get(hC4Edit,'String'));
 
-if ((c1 == NaN) || (c2 == NaN) || (c3 == NaN) || (c4 == NaN))
+% Don't do anything until we get good values
+if (isnan(c1) || isnan(c2) || isnan(c3) || isnan(c4))
   img2 = img;
   return
 end
 
-% tmp hack...!!
+c = [c1 -c2
+     c2 c1];
+ 
+c_trans = [c3
+           c4];
+
+imgTmp = img; % Need to do this to get some kind of image metadata
+imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+% Make the image 'axis' so that manipulation is aligned to
+% the center of the image, and not the top-left...
+% which is quadrant 1 style..
+%
+% Compute x and y offsets by looking at extreme top,right pixel movements
+tmp_X = [w
+         h]; % z is irrelevant -- don't care
+
+tmp = c * tmp_X; % Important: Don't normalize out c_trans
+x_offset = floor((w - round(tmp(1))) / 2);
+y_offset = floor((h - round(tmp(2))) / 2);
+
+for y=1:h
+  for x=1:w
+      
+    tmp_X = [x
+             y];
+    
+    tmp = c * tmp_X + c_trans;
+    i = round(tmp(1)) + x_offset;
+    j = round(tmp(2)) + y_offset;
+    
+    if ((i < 1) || (i > w) || (j < 1) || (j > h))
+      % Out of bounds, so do nothing
+    else
+      imgTmp(y,x,1:d) = img(j,i,1:d);
+    end
+         
+  end
+end
+
 % Save modified image
-img2 = img;
+img2 = imgTmp;
 
 
 
@@ -1102,8 +1145,6 @@ hC2Label = hObject;
 
 
 
-
-
 function c3Edit_Callback(hObject, eventdata, handles)
 % hObject    handle to c3Edit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1190,3 +1231,40 @@ global hC4Edit;
 hC4Edit = hObject;
 
 
+% --- Display busy indicator
+function showBusy(percentage)
+
+return % this blasted function isn't working
+
+global hLoadImage;
+
+get(hLoadImage,'String')
+set(hLoadImage,'String','wtf')
+subplot(2,1,1)
+refresh
+subplot(2,1,2)
+
+if (percentage == 0) % Done
+    set(hLoadImage,'String','Load Image');
+    disp wtf
+    return
+end
+
+num = floor(percentage);
+
+tmp = sprintf('%3d%% Done', num);
+%set(hLoadImage,'String',tmp);
+refresh;
+
+
+
+% --- Executes during object creation, after setting all properties.
+function loadImage_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to loadImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hLoadImage;
+hLoadImage = hObject;
+
+get(hLoadImage,'String')
