@@ -1360,6 +1360,19 @@ disp 'Projective values good enough, proceeding..'
 imgTmp = img; % Need to do this to get some kind of image metadata
 imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 
+% Make the image 'axis' so that manipulation is aligned to
+% the center of the image, and not the top-left...
+% which is quadrant 1 style..
+%
+% Compute x and y offsets by looking at extreme top,right pixel movements
+tmp_X = [w
+         h]; % z is irrelevant -- don't care
+
+x = round((a0 + a1 * w + a2 * h) / (1 + c1 * w + c2 * h));
+y = round((b0 + b1 * w + b2 * h) / (1 + c1 * w + c2 * h));
+x_offset = floor((w - x) / 2);
+y_offset = floor((h - y) / 2);
+
 nExceed = 0;
 for j=1:h
   for i=1:w
@@ -1369,8 +1382,8 @@ for j=1:h
       continue
     end
   
-    x = round((a0 + a1 * i + a2 * j) / (1 + c1 * i + c2 * j));
-    y = round((b0 + b1 * i + b2 * j) / (1 + c1 * i + c2 * j));
+    x = round((a0 + a1 * i + a2 * j) / (1 + c1 * i + c2 * j)) + x_offset;
+    y = round((b0 + b1 * i + b2 * j) / (1 + c1 * i + c2 * j)) + y_offset;
     
     %sprintf('i=%d j=%d, x=%d y=%d', i, j, x, y)
     
