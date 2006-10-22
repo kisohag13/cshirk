@@ -971,6 +971,18 @@ hCameraRollLabel = hObject;
 % --- 4-param!
 function do4Param()
 %
+% Through factoring, we convert equation (5.5.10) to
+%
+% c1 = (cos theta_z) * x
+% c2 = (sin theta_z) * x
+% c3 = (cos theta_z) * theta_y * F +
+%      (cos theta_z) * t_x +
+%      (sin theta_z) * theta_x * F -
+%      (sin theta_z) * t_y
+% c4 = (sin theta_z) * theta_y * F +
+%      (sin theta_z) * t_x -
+%      (cos theta_z) * theta_x * F +
+%      (cos theta_z) * t_y
 
 global hC1Edit;
 global hC2Edit;
@@ -1097,7 +1109,12 @@ function c1Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of c1Edit as text
 %        str2double(get(hObject,'String')) returns contents of c1Edit as a double
 
-do4Param();
+global hRadioProjective;
+if (get(hRadioProjective,'Value') == 1)
+  doProjective();
+else
+  do4Param();
+end
 
 global img2;
 imshow(img2);
@@ -1139,9 +1156,15 @@ function c2Edit_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'String') returns contents of c2Edit as text
-%        str2double(get(hObject,'String')) returns contents of c2Edit as a double
+%        str2double(get(hObject,'String')) returns contents of c2Edit as a
+%        double
 
-do4Param();
+global hRadioProjective;
+if (get(hRadioProjective,'Value') == 1)
+  doProjective();
+else
+  do4Param();
+end
 
 global img2;
 imshow(img2);
@@ -1300,6 +1323,77 @@ hLoadImage = hObject;
 get(hLoadImage,'String')
 
 
+% --- Projecting mapping!
+function doProjective()
+%
+
+global hC1Edit;
+global hC2Edit;
+global hA0Edit;
+global hA1Edit;
+global hA2Edit;
+global hB0Edit;
+global hB1Edit;
+global hB2Edit;
+
+global img;
+global img2;
+[h,w,d] = size(img);
+
+c1 = str2double(get(hC1Edit,'String'));
+c2 = str2double(get(hC2Edit,'String'));
+a0 = str2double(get(hA0Edit,'String'));
+a1 = str2double(get(hA1Edit,'String'));
+a2 = str2double(get(hA2Edit,'String'));
+b0 = str2double(get(hB0Edit,'String'));
+b1 = str2double(get(hB1Edit,'String'));
+b2 = str2double(get(hB2Edit,'String'));
+
+% Don't do anything until we get good values
+if (isnan(c1) || isnan(c2) || isnan(a0) || isnan(a1) || isnan(a2) || isnan(b0) || isnan(b1) || isnan(b2))
+  img2 = img;
+  return
+end
+
+disp 'Projective values good enough, proceeding..'
+
+imgTmp = img; % Need to do this to get some kind of image metadata
+imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+nExceed = 0;
+for j=1:h
+  for i=1:w
+      
+    if ((1 + c1 * i + c2 * j) == 0)
+      continue
+    end
+    
+    if ((1 + c1 * i + c2 * j) == 0)
+      continue
+    end
+  
+    x = round((a0 + a1 * i + a2 * j) / (1 + c1 * i + c2 * j));
+    y = round((b0 + b1 * i + b2 * j) / (1 + c1 * i + c2 * j));
+    
+    %sprintf('i=%d j=%d, x=%d y=%d', i, j, x, y)
+    
+    if ((x < 1) || (x > w) || (y < 1) || (y > h))
+      % Out of bounds, so do nothing
+      nExceed = nExceed + 1;
+    else
+      imgTmp(y,x,1:d) = img(j,i,1:d);
+    end
+         
+  end
+end
+
+sprintf('nExceed = %d', nExceed)
+
+% Save modified image
+img2 = imgTmp;
+
+
+
 % --- Executes on button press in radioProjective.
 function radioProjective_Callback(hObject, eventdata, handles)
 % hObject    handle to radioProjective (see GCBO)
@@ -1379,6 +1473,11 @@ function a0Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of a0Edit as text
 %        str2double(get(hObject,'String')) returns contents of a0Edit as a double
 
+doProjective();
+
+global img2;
+imshow(img2);
+
 
 % --- Executes during object creation, after setting all properties.
 function a0Edit_CreateFcn(hObject, eventdata, handles)
@@ -1416,6 +1515,11 @@ function a1Edit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of a1Edit as a
 %        double
 
+doProjective();
+
+global img2;
+imshow(img2);
+
 
 % --- Executes during object creation, after setting all properties.
 function a1Edit_CreateFcn(hObject, eventdata, handles)
@@ -1441,6 +1545,11 @@ function a2Edit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of a2Edit as text
 %        str2double(get(hObject,'String')) returns contents of a2Edit as a double
+
+doProjective();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1489,6 +1598,11 @@ function b0Edit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of b0Edit as a
 %        double
 
+doProjective();
+
+global img2;
+imshow(img2);
+
 
 % --- Executes during object creation, after setting all properties.
 function b0Edit_CreateFcn(hObject, eventdata, handles)
@@ -1514,6 +1628,11 @@ function b1Edit_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of b1Edit as text
 %        str2double(get(hObject,'String')) returns contents of b1Edit as a double
+
+doProjective();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1541,6 +1660,10 @@ function b2Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of b2Edit as text
 %        str2double(get(hObject,'String')) returns contents of b2Edit as a double
 
+doProjective();
+
+global img2;
+imshow(img2);
 
 
 % --- Executes during object creation, after setting all properties.
