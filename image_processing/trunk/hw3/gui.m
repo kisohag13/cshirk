@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 21-Oct-2006 23:46:22
+% Last Modified by GUIDE v2.5 23-Oct-2006 08:55:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -100,12 +100,14 @@ if (filename ~= 0)
     global hRadioRoll;
     global hRadio4Param;
     global hRadioProjective;
+    global hRadioAffine;
     set(hRadioTranslation,'Visible','On');
     set(hRadioPanTilt,'Visible','On');
     set(hRadioZoom,'Visible','On');
     set(hRadioRoll,'Visible','On');
     set(hRadio4Param,'Visible','On');
     set(hRadioProjective,'Visible','On');
+    set(hRadioAffine,'Visible','On');
     
     % Default to 'Translation' mode
     doRadioTranslation();    
@@ -283,6 +285,7 @@ x_offset = floor((w - round(tmp(1))) / 2);
 y_offset = floor((h - round(tmp(2))) / 2);
 
 for j=1:h
+  showBusy(100 * (j-1) / h);
   for i=1:w
    
     big_X = [i
@@ -301,6 +304,7 @@ for j=1:h
     
   end
 end
+showBusy(0);
 
 % Save modified image
 img2 = imgTmp;
@@ -466,6 +470,7 @@ global hRadioZoom;
 global hRadioRoll;
 global hRadio4Param;
 global hRadioProjective;
+global hRadioAffine;
 
 set(hRadioTranslation,'Value',0);
 set(hRadioPanTilt,'Value',0);
@@ -473,6 +478,7 @@ set(hRadioZoom,'Value',0);
 set(hRadioRoll,'Value',0);
 set(hRadio4Param,'Value',0);
 set(hRadioProjective,'Value',0);
+set(hRadioAffine,'Value',0);
 
 global hCameraTrack;
 global hCameraTrackLabel;
@@ -705,6 +711,7 @@ if (zoomLevel > 1)
 
   % Iteriate over the zoomed image
   for y=1:h
+    showBusy(100 * (y-1) / h);
     for x=1:w
         
       % To be honest, I am too rushed to think about
@@ -726,6 +733,7 @@ else
 
   % Iteriate over the source image
   for j=1:h
+    showBusy(100 * (j-1) / h);
     for i=1:w
       
       x = round(i * zoomLevel) + x_offset;
@@ -741,6 +749,7 @@ else
   end
 
 end
+showBusy(0);
 
 % Save modified image
 img2 = imgTmp;
@@ -1287,27 +1296,21 @@ hC4Edit = hObject;
 % --- Display busy indicator
 function showBusy(percentage)
 
-return % this blasted function isn't working
-
 global hLoadImage;
-
-get(hLoadImage,'String')
-set(hLoadImage,'String','wtf')
-subplot(2,1,1)
-refresh
-subplot(2,1,2)
 
 if (percentage == 0) % Done
     set(hLoadImage,'String','Load Image');
-    disp wtf
+    drawnow();
     return
 end
 
 num = floor(percentage);
 
-tmp = sprintf('%3d%% Done', num);
-%set(hLoadImage,'String',tmp);
-refresh;
+if (mod(num,15) == 0)
+  tmp = sprintf('%3d%% Done', num);
+  set(hLoadImage,'String',tmp);
+  drawnow();
+end
 
 
 
@@ -1365,16 +1368,26 @@ imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
 % which is quadrant 1 style..
 %
 % Compute x and y offsets by looking at extreme top,right pixel movements
-tmp_X = [w
-         h]; % z is irrelevant -- don't care
 
-x = round((a0 + a1 * w + a2 * h) / (1 + c1 * w + c2 * h));
-y = round((b0 + b1 * w + b2 * h) / (1 + c1 * w + c2 * h));
-x_offset = floor((w - x) / 2);
-y_offset = floor((h - y) / 2);
+% Avoid divide by zero issues
+if ((1 + c1 * w + c2 * h) == 0)
+  x_offset = 0;
+  y_offset = 0;
+else
+
+  tmp_X = [w
+           h]; % z is irrelevant -- don't care
+
+  x = round((a0 + a1 * w + a2 * h) / (1 + c1 * w + c2 * h));
+  y = round((b0 + b1 * w + b2 * h) / (1 + c1 * w + c2 * h));
+  x_offset = floor((w - x) / 2);
+  y_offset = floor((h - y) / 2);
+  
+end
 
 nExceed = 0;
 for j=1:h
+  showBusy(100 * (j-1) / h);
   for i=1:w
     
     % Avoid divide by zero issues
@@ -1396,6 +1409,7 @@ for j=1:h
          
   end
 end
+showBusy(0);
 
 sprintf('nExceed = %d', nExceed)
 
@@ -1461,6 +1475,10 @@ set(hB2Edit,'Visible','On');
 set(hB2Edit,'String','');
 set(hB2Label,'Visible','On');
 
+% Reset image
+global img;
+imshow(img);
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1483,7 +1501,12 @@ function a0Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of a0Edit as text
 %        str2double(get(hObject,'String')) returns contents of a0Edit as a double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1525,7 +1548,12 @@ function a1Edit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of a1Edit as a
 %        double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1556,7 +1584,12 @@ function a2Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of a2Edit as text
 %        str2double(get(hObject,'String')) returns contents of a2Edit as a double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1608,7 +1641,12 @@ function b0Edit_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of b0Edit as a
 %        double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1639,7 +1677,12 @@ function b1Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of b1Edit as text
 %        str2double(get(hObject,'String')) returns contents of b1Edit as a double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1670,7 +1713,12 @@ function b2Edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of b2Edit as text
 %        str2double(get(hObject,'String')) returns contents of b2Edit as a double
 
-doProjective();
+global hRadioAffine;
+if (get(hRadioAffine,'Value') == 1)
+  doAffine();
+else
+  doProjective();
+end
 
 global img2;
 imshow(img2);
@@ -1721,3 +1769,142 @@ function b0Label_CreateFcn(hObject, eventdata, handles)
 
 global hB0Label;
 hB0Label = hObject;
+
+
+% --- Affine!
+function doAffine()
+%
+
+global hA0Edit;
+global hA1Edit;
+global hA2Edit;
+global hB0Edit;
+global hB1Edit;
+global hB2Edit;
+
+global img;
+global img2;
+[h,w,d] = size(img);
+
+a0 = str2double(get(hA0Edit,'String'));
+a1 = str2double(get(hA1Edit,'String'));
+a2 = str2double(get(hA2Edit,'String'));
+b0 = str2double(get(hB0Edit,'String'));
+b1 = str2double(get(hB1Edit,'String'));
+b2 = str2double(get(hB2Edit,'String'));
+
+% Don't do anything until we get good values
+if (isnan(a0) || isnan(a1) || isnan(a2) || isnan(b0) || isnan(b1) || isnan(b2))
+  img2 = img;
+  return
+end
+
+disp 'Projective values good enough, proceeding..'
+
+imgTmp = img; % Need to do this to get some kind of image metadata
+imgTmp(1:h,1:w,1:d) = 0; % Black out modified img, initially
+
+% Make the image 'axis' so that manipulation is aligned to
+% the center of the image, and not the top-left...
+% which is quadrant 1 style..
+%
+% Compute x and y offsets by looking at extreme top,right pixel movements
+x = round(a0 + a1 * w + a2 * h + w);
+y = round(b0 + b1 * w + b2 * h + h);
+
+x_offset = floor((w - x) / 2);
+y_offset = floor((h - y) / 2);
+
+
+nExceed = 0;
+for y=1:h
+  showBusy(100 * (y-1) / h);
+  for x=1:w
+      
+    i = round(a0 + a1 * x + a2 * y + x) + x_offset;
+    j = round(b0 + b1 * x + b2 * y + y) + y_offset;
+    
+    %sprintf('i=%d j=%d, x=%d y=%d', i, j, x, y)
+    
+    if ((i < 1) || (i > w) || (j < 1) || (j > h))
+      % Out of bounds, so do nothing
+      nExceed = nExceed + 1;
+    else
+      imgTmp(y,x,1:d) = img(j,i,1:d);
+    end
+         
+  end
+end
+showBusy(0);
+
+sprintf('nExceed = %d', nExceed)
+
+% Save modified image
+img2 = imgTmp;
+
+
+
+
+% --- Executes on button press in radioAffine.
+function radioAffine_Callback(hObject, eventdata, handles)
+% hObject    handle to radioAffine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of radioAffine
+
+radioTurnAllOff();
+
+% Set radio button -- got cleared by TurnAllOff function
+global hRadioAffine;
+set(hRadioAffine,'Value',1);
+
+% Enable controls...
+global hA0Edit;
+global hA0Label;
+global hA1Edit;
+global hA1Label;
+global hA2Edit;
+global hA2Label;
+global hB0Edit;
+global hB0Label;
+global hB1Edit;
+global hB1Label;
+global hB2Edit;
+global hB2Label;
+
+set(hA0Edit,'Visible','On');
+set(hA0Edit,'String','');
+set(hA0Label,'Visible','On');
+set(hA1Edit,'Visible','On');
+set(hA1Edit,'String','');
+set(hA1Label,'Visible','On');
+set(hA2Edit,'Visible','On');
+set(hA2Edit,'String','');
+set(hA2Label,'Visible','On');
+set(hB0Edit,'Visible','On');
+set(hB0Edit,'String','');
+set(hB0Label,'Visible','On');
+set(hB1Edit,'Visible','On');
+set(hB1Edit,'String','');
+set(hB1Label,'Visible','On');
+set(hB2Edit,'Visible','On');
+set(hB2Edit,'String','');
+set(hB2Label,'Visible','On');
+
+% Reset image
+global img;
+imshow(img);
+
+
+% --- Executes during object creation, after setting all properties.
+function radioAffine_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to radioAffine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+global hRadioAffine;
+hRadioAffine = hObject;
+
+
+
