@@ -137,6 +137,9 @@ sliderPos = get(hCameraTrack,'Value');
 
 [h,w,d] = size(img);
 
+% Argh, one-line hack
+img2 = img;
+
 %
 % slider position (.5, 1]? slide image to the right
 %
