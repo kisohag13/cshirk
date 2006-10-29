@@ -51,6 +51,53 @@ function six12(R)
     % do EBMA across the blocks
     best_fit = [+inf -1 -1]; % init: error, r_y, r_x
     
+    % iteriate across the blocks
+    num_blks_y = h / blk_sz;
+    num_blks_x = w / blk_sz;
+   
+    for blk_y=1:num_blks_y
+        for blk_x=1:num_blks_x
+            
+            % now for given block, search for best match
+            start_y = (blk_y - 1) * 16 + 1;
+            end_y = start_y + blk_sz;
+            start_x = (blk_x - 1) * 16 + 1;
+            end_x = start_y + blk_sz;
+            
+            for r_y=-R:R
+                
+                % Exceeds Height?
+                if ((start_y + r_y < 1) || (end_y + r_y > h)
+                    continue
+                end
+                
+                for r_x=-R:R
+                    
+                    % Exceeds width?
+                    if ((start_x + r_x < 1) || (end_x + r_x > w))
+                        continue
+                    end
+                    
+                    
+                    % Ok, we are within bounds, now compute the error
+                    sum = 0;
+                    for j=1:blk_sz
+                        for i=1:blk_sz
+                        end
+                    end
+                    
+                end
+            end
+            
+        end
+    end
+    
+    
+    
+    
+    
+    
+    
     for r_y=0:(R-1)
         for r_x=0:(R-1)
             
