@@ -54,6 +54,9 @@ function six12(R)
     % iteriate across the blocks
     num_blks_y = h / blk_sz;
     num_blks_x = w / blk_sz;
+    
+    blk_mv_y = []; % Y motion vectors for blocks
+    blk_mv_x = []; % X ..
    
     for blk_y=1:num_blks_y
         for blk_x=1:num_blks_x
@@ -81,9 +84,19 @@ function six12(R)
                     
                     % Ok, we are within bounds, now compute the error
                     sum = 0;
+                    min_error = +inf;
                     for j=1:blk_sz
                         for i=1:blk_sz
+                            sum = sum + abs(targetFrame(j + r_y, i + rx, 1:d) - anchorFrame(j, i, 1:d));
                         end
+                    end
+                    
+                    if (sum < min_error)
+                        min_error = sum;
+                        % Save motion vectors for this block so I can
+                        % reference them later
+                        blk_mv_y(blk_y) = r_y;
+                        blk_mv_x(blk_x) = r_x;
                     end
                     
                 end
@@ -92,32 +105,6 @@ function six12(R)
         end
     end
     
-    
-    
-    
-    
-    
-    
-    for r_y=0:(R-1)
-        for r_x=0:(R-1)
-            
-            sum = 0;
-            for j=1:blk_sz
-                for i=1:blk_sz
-                    sum = sum + abs(targetFrame(j + r_y, i + r_x, 1:d) - anchorFrame(j,i,1:d));
-                end
-            end
-            
-            if (sum < best_fit(1))
-                best_fit(1) = sum;
-                best_fit(2) = r_y;
-                best_fit(3) = r_x;
-            end
-            
-        end
-    end
-    
-    sprintf('error = %d, r_y = %d, r_x = %d', best_fit(1), best_fit(2), best_fit(3))
     
    
     
