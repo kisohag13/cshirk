@@ -40,6 +40,9 @@ function six12(R)
     [h2,w2,d2] = size(targetFrame);
     if ((h2 ~= h) || (w2 ~= w) || (d2 ~= d))
         error 'Video frames have different dimensions (h,w,d)';
+    else
+        sprintf('frames are %d x %d x %d', w, h, d)
+        %pause
     end
     
     % Assume frame dimensions > given block size
@@ -52,25 +55,36 @@ function six12(R)
     best_fit = [+inf -1 -1]; % init: error, r_y, r_x
     
     % iteriate across the blocks
-    num_blks_y = h / blk_sz;
-    num_blks_x = w / blk_sz;
+    num_blks_y = (h / blk_sz) - 1;
+    num_blks_x = (w / blk_sz) - 1;
     
     blk_mv_y = []; % Y motion vectors for blocks
     blk_mv_x = []; % X ..
    
     for blk_y=1:num_blks_y
+        
+        subplot(2,1,2);
+        percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
+        title(percent_done);
+        drawnow();
+        
         for blk_x=1:num_blks_x
             
             % now for given block, search for best match
             start_y = (blk_y - 1) * 16 + 1;
             end_y = start_y + blk_sz;
             start_x = (blk_x - 1) * 16 + 1;
-            end_x = start_y + blk_sz;
+            end_x = start_x + blk_sz;
             
+            % sprintf('start_y = %d, end_y = %d, start_x = %d, end_x = %d', start_y, end_y, start_x, end_x)
+            
+            % Init the min error for the MV to infinity...
+            % any error we actually get will be smaller
+            min_error = +inf;
             for r_y=-R:R
                 
                 % Exceeds Height?
-                if ((start_y + r_y < 1) || (end_y + r_y > h)
+                if ((start_y + r_y < 1) || (end_y + r_y > h))
                     continue
                 end
                 
@@ -82,16 +96,30 @@ function six12(R)
                     end
                     
                     
-                    % Ok, we are within bounds, now compute the error
+                    % Ok, entire block within bounds
+                    % Now compute the error
                     sum = 0;
-                    min_error = +inf;
-                    for j=1:blk_sz
-                        for i=1:blk_sz
-                            sum = sum + abs(targetFrame(j + r_y, i + rx, 1:d) - anchorFrame(j, i, 1:d));
+                    for j=start_y:end_y
+                        for i=start_x:end_x
+                            
+                            %sprintf('y=%d x=%d', j + r_y, i + r_x) % Debug
+                            
+                            sum = sum + abs(targetFrame(j + r_y, i + r_x, 1:d) - anchorFrame(j, i, 1:d));
                         end
                     end
                     
+                    
+                    %sprintf('min_error = %d, sum = %d', min_error, sum)
                     if (sum < min_error)
+                        
+                        if (min_error == +inf)
+                            %sprintf('now: sum=%d x,y=(%d,%d)', sum, r_x, r_y)
+                        else
+                        
+                            %sprintf('was: sum=%d x,y=(%d,%d)   now: sum=%d x,y=(%d,%d)', sum, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error, r_x, r_y)
+                        end
+                        %pause
+                        
                         min_error = sum;
                         % Save motion vectors for this block so I can
                         % reference them later
@@ -102,6 +130,7 @@ function six12(R)
                 end
             end
             
+            sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
         end
     end
     
