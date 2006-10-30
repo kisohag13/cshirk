@@ -26,13 +26,15 @@ function six12(R)
     fclose(fid);
     targetFrame = reshape(Target_Image,352,288)'; 
 
-    
-    subplot(2,1,1);
+    subplot(2,2,1);
     imshow(anchorFrame/max(max(anchorFrame)));
     title('Anchor Frame');
-    subplot(2,1,2);
+    subplot(2,2,2);
     imshow(targetFrame/max(max(targetFrame)));
     title('Target Frame');
+    
+    % Perhaps we need to copy that image metadata again
+    predictedFrame = anchorFrame;
     
     % Get dimensions of frames, ensure equivalent
     [h,w,d] = size(anchorFrame);
@@ -63,7 +65,7 @@ function six12(R)
    
     for blk_y=1:num_blks_y
         
-        subplot(2,1,2);
+        subplot(2,2,2);
         percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
         title(percent_done);
         drawnow();
@@ -123,17 +125,54 @@ function six12(R)
                         min_error = sum;
                         % Save motion vectors for this block so I can
                         % reference them later
-                        blk_mv_y(blk_y) = r_y;
-                        blk_mv_x(blk_x) = r_x;
+                        blk_mv_y(blk_y, blk_x) = r_y;
+                        blk_mv_x(blk_y, blk_x) = r_x;
                     end
                     
                 end
             end
             
-            sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
+            %sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
+            
+            % We know the best match, so generate the predicted frame
+            for j=start_y:end_y
+                for i=start_x:end_x
+                    predictedFrame(j + blk_mv_y(blk_y, blk_x), i + blk_mv_x(blk_y, blk_x), 1:d) = anchorFrame(j, i, 1:d);
+                end
+            end
+            
         end
     end
     
+    % Plot estimated motion field
+    subplot(2,2,3);
+    quiver(blk_mv_x, blk_mv_y);
+    title('Estimated motion field');
     
+    % Plot predicted image
+    subplot(2,2,4);
+    imshow(predictedFrame/max(max(predictedFrame)));
+    title('Predicted Image');
+    
+    
+    % Plot prediction-error image
+    % Scaled difference image: abs(2*(predicted image - target frame)+128) 
+    subplot(2,2,1);
+    scaledDiff = abs(2*(predictedFrame - targetFrame) + 128);
+    imshow(scaledDiff/max(max(scaledDiff)));
+    title('Scaled difference image');
+    
+    % Calculate PSNR of predicted frame w.r.t. original anchor frame
+    mse = 0;
+    for j=1:h
+        for i=1:w
+            mse = mse + (predictedFrame(j,i,1:d) - anchorFrame(j,i,1:d))^2;
+        end
+    end
+    
+    psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
+    
+    psnr
+    sprintf('psnr = %f dB', psnr)
    
     
