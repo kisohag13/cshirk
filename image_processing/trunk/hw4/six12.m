@@ -91,7 +91,7 @@ function six12(R, halfPel)
             r_x_from = max(start_x - R, 1);
             r_x_to = min(end_x + R, w - blk_sz);
             
-            for r_y=r_y_from:r_y_to
+            for r_y=r_y_from:r_y_to 
            
                 for r_x=r_x_from:r_x_to
                 
