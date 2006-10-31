@@ -61,13 +61,8 @@ function six12(R, halfPel)
         %pause
     end
     
-    % Assume frame dimensions > given block size
-    % Assume frame dimensions multiple of given block size
-    
-    
-    
-    
-    
+    %%% Assume frame dimensions > given block size
+    %%% Assume frame dimensions multiple of given block size
     
     % iteriate across the blocks
     num_blks_y = (h / blk_sz) - 1;
