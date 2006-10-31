@@ -8,7 +8,11 @@
 % Allow user to choose the search range (R)
 %
 
-function six12(R)
+function six12(R, halfPel)
+
+    if (nargin ~= 2)
+        error 'six12(R, halfPel) => R: search in px, halfPel: boolean, whether to expand to half-pel search EBMA'
+    end
 
     close all;
 
@@ -24,12 +28,22 @@ function six12(R)
     fid = fopen('foreman72.Y','r+','n');
     [Target_Image]= fread(fid,'uint8');
     fclose(fid);
-    targetFrame = reshape(Target_Image,352,288)'; 
+    targetFrame = reshape(Target_Image,352,288)';
+    
+    % Determine whether we're using half-pel accuracy
+    if (halfPel == 1)
+        anchorFrame = interp2(anchorFrame, 1.5, 'linear');
+        targetFrame = interp2(targetFrame, 1.5, 'linear');
+        %figure
+        %imshow(anchorFrame/max(max(anchorFrame)));
+        %title('Anchor Frame');
+        
+    end
 
-    subplot(2,2,1);
+    subplot(2,3,1);
     imshow(anchorFrame/max(max(anchorFrame)));
     title('Anchor Frame');
-    subplot(2,2,2);
+    subplot(2,3,2);
     imshow(targetFrame/max(max(targetFrame)));
     title('Target Frame');
     
@@ -65,7 +79,7 @@ function six12(R)
    
     for blk_y=1:num_blks_y
         
-        subplot(2,2,2);
+        subplot(2,3,2);
         percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
         title(percent_done);
         drawnow();
@@ -145,34 +159,38 @@ function six12(R)
     end
     
     % Plot estimated motion field
-    subplot(2,2,3);
-    quiver(blk_mv_x, blk_mv_y);
+    subplot(2,3,3);
+    blk_mv_y_sz = size(blk_mv_y);
+    quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1,1:blk_mv_y_sz(2)));
     title('Estimated motion field');
     
     % Plot predicted image
-    subplot(2,2,4);
+    subplot(2,3,4);
     imshow(predictedFrame/max(max(predictedFrame)));
     title('Predicted Image');
     
     
     % Plot prediction-error image
     % Scaled difference image: abs(2*(predicted image - target frame)+128) 
-    subplot(2,2,1);
+    subplot(2,3,5);
     scaledDiff = abs(2*(predictedFrame - targetFrame) + 128);
     imshow(scaledDiff/max(max(scaledDiff)));
     title('Scaled difference image');
     
     % Calculate PSNR of predicted frame w.r.t. original anchor frame
+    % Actually, no, do it w.r.t. the target frame
     mse = 0;
     for j=1:h
         for i=1:w
-            mse = mse + (predictedFrame(j,i,1:d) - anchorFrame(j,i,1:d))^2;
+            mse = mse + (predictedFrame(j,i,1:d) - targetFrame(j,i,1:d))^2;
         end
     end
+    mse = mse / w / h;
     
     psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
     
-    psnr
-    sprintf('psnr = %f dB', psnr)
+    subplot(2,3,6);
+    psnr_str = sprintf('psnr = %.2f dB', psnr);
+    title(psnr_str);
    
     
