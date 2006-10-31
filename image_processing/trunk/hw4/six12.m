@@ -31,21 +31,21 @@ function six12(R, halfPel)
     targetFrame = reshape(Target_Image,352,288)';
     
     % Determine whether we're using half-pel accuracy
-    if (halfPel == 1)
-        anchorFrame = interp2(anchorFrame, 1.5, 'linear');
-        targetFrame = interp2(targetFrame, 1.5, 'linear');
+    %if (halfPel == 1)
+    %    anchorFrame = interp2(anchorFrame, 1.5, 'linear');
+    %    targetFrame = interp2(targetFrame, 1.5, 'linear');
         %figure
         %imshow(anchorFrame/max(max(anchorFrame)));
         %title('Anchor Frame');
         
-    end
+    %end
 
-    subplot(2,3,1);
+    subplot(2,2,1);
     imshow(anchorFrame/max(max(anchorFrame)));
     title('Anchor Frame');
-    subplot(2,3,2);
+    subplot(2,2,2);
     imshow(targetFrame/max(max(targetFrame)));
-    title('Target Frame');
+    title('Target Frame: 0% Done');
     
     % Perhaps we need to copy that image metadata again
     predictedFrame = anchorFrame;
@@ -67,8 +67,7 @@ function six12(R, halfPel)
     
     
     
-    % do EBMA across the blocks
-    best_fit = [+inf -1 -1]; % init: error, r_y, r_x
+    
     
     % iteriate across the blocks
     num_blks_y = (h / blk_sz) - 1;
@@ -78,11 +77,6 @@ function six12(R, halfPel)
     blk_mv_x = []; % X ..
    
     for blk_y=1:num_blks_y
-        
-        subplot(2,3,2);
-        percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
-        title(percent_done);
-        drawnow();
         
         for blk_x=1:num_blks_x
             
@@ -97,56 +91,47 @@ function six12(R, halfPel)
             % Init the min error for the MV to infinity...
             % any error we actually get will be smaller
             min_error = +inf;
-            for r_y=-R:R
+            
+            r_y_from = max(start_y - R, 1);
+            r_y_to = min(end_y + R, h - blk_sz);
+            r_x_from = max(start_x - R, 1);
+            r_x_to = min(end_x + R, w - blk_sz);
+            
+            %sprintf('blk x,y (%d,%d) -- from x,y (%d,%d) to x,y (%d,%d)', ...
+            %    blk_x, blk_y, r_x_from, r_y_from, r_x_to, r_y_to)
+            
+            for r_y=r_y_from:r_y_to
+           
+                for r_x=r_x_from:r_x_to
                 
-                % Exceeds Height?
-                if ((start_y + r_y < 1) || (end_y + r_y > h))
-                    continue
-                end
-                
-                for r_x=-R:R
-                    
-                    % Exceeds width?
-                    if ((start_x + r_x < 1) || (end_x + r_x > w))
-                        continue
-                    end
-                    
-                    
                     % Ok, entire block within bounds
                     % Now compute the error
-                    sum = 0;
-                    for j=start_y:end_y
-                        for i=start_x:end_x
-                            
-                            %sprintf('y=%d x=%d', j + r_y, i + r_x) % Debug
-                            
-                            sum = sum + abs(targetFrame(j + r_y, i + r_x, 1:d) - anchorFrame(j, i, 1:d));
-                        end
-                    end
                     
+                    %if ((blk_y == 1) && (blk_x == 21))
+                    %    sprintf('target (%d:%d, %d:%d)', r_y,r_y+blk_sz, r_x,r_x+blk_sz)
+                    %end
+                    
+                    error_sum = sum(sum( ...
+                        abs( ...
+                            targetFrame(r_y:r_y+blk_sz, r_x:r_x+blk_sz, 1:d) - ...
+                            anchorFrame(start_y:end_y, start_x:end_x, 1:d) ...
+                        ) ...
+                    ));
                     
                     %sprintf('min_error = %d, sum = %d', min_error, sum)
-                    if (sum < min_error)
+                    if (error_sum < min_error)
                         
-                        if (min_error == +inf)
-                            %sprintf('now: sum=%d x,y=(%d,%d)', sum, r_x, r_y)
-                        else
-                        
-                            %sprintf('was: sum=%d x,y=(%d,%d)   now: sum=%d x,y=(%d,%d)', sum, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error, r_x, r_y)
-                        end
-                        %pause
-                        
-                        min_error = sum;
+                        min_error = error_sum;
                         % Save motion vectors for this block so I can
                         % reference them later
-                        blk_mv_y(blk_y, blk_x) = r_y;
-                        blk_mv_x(blk_y, blk_x) = r_x;
+                        blk_mv_y(blk_y, blk_x) = r_y - start_y;
+                        blk_mv_x(blk_y, blk_x) = r_x - start_x;
                     end
                     
                 end
             end
             
-            %sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
+            sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
             
             % We know the best match, so generate the predicted frame
             for j=start_y:end_y
@@ -156,23 +141,31 @@ function six12(R, halfPel)
             end
             
         end
+        
+        subplot(2,2,2);
+        percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
+        title(percent_done);
+        drawnow();
+        
     end
     
     % Plot estimated motion field
-    subplot(2,3,3);
+    subplot(2,2,3);
     blk_mv_y_sz = size(blk_mv_y);
+    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
+    % bottom left
     quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1,1:blk_mv_y_sz(2)));
     title('Estimated motion field');
     
     % Plot predicted image
-    subplot(2,3,4);
+    subplot(2,2,4);
     imshow(predictedFrame/max(max(predictedFrame)));
     title('Predicted Image');
     
     
     % Plot prediction-error image
     % Scaled difference image: abs(2*(predicted image - target frame)+128) 
-    subplot(2,3,5);
+    subplot(2,2,1);
     scaledDiff = abs(2*(predictedFrame - targetFrame) + 128);
     imshow(scaledDiff/max(max(scaledDiff)));
     title('Scaled difference image');
@@ -189,8 +182,7 @@ function six12(R, halfPel)
     
     psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
     
-    subplot(2,3,6);
     psnr_str = sprintf('psnr = %.2f dB', psnr);
-    title(psnr_str);
+    psnr_str
    
     
