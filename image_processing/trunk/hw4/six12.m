@@ -68,8 +68,7 @@ function six12(R, halfPel)
     num_blks_y = (h / blk_sz) - 1;
     num_blks_x = (w / blk_sz) - 1;
     
-    blk_mv_y = []; % Y motion vectors for blocks
-    blk_mv_x = []; % X ..
+    mv = []; % motion vectors
    
     for blk_y=1:num_blks_y
         
@@ -92,9 +91,6 @@ function six12(R, halfPel)
             r_x_from = max(start_x - R, 1);
             r_x_to = min(end_x + R, w - blk_sz);
             
-            %sprintf('blk x,y (%d,%d) -- from x,y (%d,%d) to x,y (%d,%d)', ...
-            %    blk_x, blk_y, r_x_from, r_y_from, r_x_to, r_y_to)
-            
             for r_y=r_y_from:r_y_to
            
                 for r_x=r_x_from:r_x_to
@@ -102,14 +98,10 @@ function six12(R, halfPel)
                     % Ok, entire block within bounds
                     % Now compute the error
                     
-                    %if ((blk_y == 1) && (blk_x == 21))
-                    %    sprintf('target (%d:%d, %d:%d)', r_y,r_y+blk_sz, r_x,r_x+blk_sz)
-                    %end
-                    
                     error_sum = sum(sum( ...
                         abs( ...
-                            targetFrame(r_y:r_y+blk_sz, r_x:r_x+blk_sz, 1:d) - ...
-                            anchorFrame(start_y:end_y, start_x:end_x, 1:d) ...
+                            anchorFrame(r_y:r_y+blk_sz, r_x:r_x+blk_sz, 1:d) - ...
+                            targetFrame(start_y:end_y, start_x:end_x, 1:d) ...
                         ) ...
                     ));
                     
@@ -117,23 +109,56 @@ function six12(R, halfPel)
                     if (error_sum < min_error)
                         
                         min_error = error_sum;
-                        % Save motion vectors for this block so I can
-                        % reference them later
-                        blk_mv_y(blk_y, blk_x) = r_y - start_y;
-                        blk_mv_x(blk_y, blk_x) = r_x - start_x;
+
+                        best_r_x = r_x;
+                        best_r_y = r_y;
+                        best_del_x = r_x - start_x;
+                        best_del_y = r_y - start_y;
+                        
                     end
                     
                 end
             end
             
-            sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
+            sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
+                blk_x, blk_y, best_r_x, best_r_y, start_x, start_y)
             
-            % We know the best match, so generate the predicted frame
-            for j=start_y:end_y
-                for i=start_x:end_x
-                    predictedFrame(j + blk_mv_y(blk_y, blk_x), i + blk_mv_x(blk_y, blk_x), 1:d) = anchorFrame(j, i, 1:d);
-                end
-            end
+            predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
+                anchorFrame(best_r_y:(best_r_y+blk_sz), best_r_x:(best_r_x+blk_sz), 1:d);
+            
+            
+            %predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
+            %    anchorFrame( ...
+            %        best_r_y:(best_r_y + blk_sz), best_r_x:(best_r_x + blk_sz), 1:d ...
+            %    );
+            
+            
+            % Save motion vectors
+            %mv(blk_y, blk_x) = struct('del_x', r_x - start_x, 'del_y', r_y - start_y);
+            
+            %sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
+            
+            %y_off = blk_mv_y(blk_y, blk_x);
+            %x_off = blk_mv_x(blk_y, blk_x);
+            
+            %sprintf('gonna remap: predict(%d:%d,%d:%d) from anchor(%d:%d,%d:%d)', ...
+             %   start_y, end_y, start_x, end_x, start_y + y_off, end_y + y_off, start_x + x_off, end_x + x_off)
+            
+            % We know the best match, so generate a block of the predicted frame
+            
+            
+            
+               %     (start_y + y_off):(end_y + y_off), (start_x + x_off):(end_x + x_off), 1:d ...
+                %);
+           
+            
+            
+            %for j=start_y:end_y
+             %   for i=start_x:end_x
+              %      predictedFrame(j + blk_mv_y(blk_y, blk_x), i + blk_mv_x(blk_y, blk_x), 1:d) = anchorFrame(j, i, 1:d);
+               %     %predictedFrame(j,i,1:d) = anchorFrame(j + blk_mv_y(blk_y, blk_x),i + blk_mv_x(blk_y, blk_x),1:d);
+                %end
+            %end
             
         end
         
@@ -144,26 +169,31 @@ function six12(R, halfPel)
         
     end
     
-    % Plot estimated motion field
-    subplot(2,2,3);
-    blk_mv_y_sz = size(blk_mv_y);
-    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
-    % bottom left
-    quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1,1:blk_mv_y_sz(2)));
-    title('Estimated motion field');
     
     % Plot predicted image
     subplot(2,2,4);
     imshow(predictedFrame/max(max(predictedFrame)));
     title('Predicted Image');
     
-    
     % Plot prediction-error image
     % Scaled difference image: abs(2*(predicted image - target frame)+128) 
-    subplot(2,2,1);
+    subplot(2,2,3);
     scaledDiff = abs(2*(predictedFrame - targetFrame) + 128);
     imshow(scaledDiff/max(max(scaledDiff)));
     title('Scaled difference image');
+    hold on;
+    
+    % Plot estimated motion field
+    %subplot(2,2,1);
+    %blk_mv_y_sz = size(blk_mv_y);
+    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
+    % bottom left
+    %quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1, 1:blk_mv_y_sz(2)));
+    %title('Est. motion field, Anchor');
+    %axis image;
+    %axis([0 num_blks_x 0 num_blks_y]);
+    
+    
     
     % Calculate PSNR of predicted frame w.r.t. original anchor frame
     % Actually, no, do it w.r.t. the target frame
