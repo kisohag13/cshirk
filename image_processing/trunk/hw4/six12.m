@@ -8,16 +8,18 @@
 % Allow user to choose the search range (R)
 %
 
-function six12(R, halfPel)
+function six12(R)
 
-    if (nargin ~= 2)
-        error 'six12(R, halfPel) => R: search in px, halfPel: boolean, whether to expand to half-pel search EBMA'
+    % Poor usage guide
+    if (nargin ~= 1)
+        error 'six12(R) => R: search in px'
     end
 
+    % Clear old figure
     close all;
 
-    % Block size = 16x16
-    blk_sz = 16; % 16 x 16
+    % Hardcoded Block size = 16x16
+    blk_sz = 16; %16; % 16 x 16
 
     %%% Read two video frames in Y format
     fid= fopen('foreman69.Y','r+','n'); 
@@ -30,16 +32,7 @@ function six12(R, halfPel)
     fclose(fid);
     targetFrame = reshape(Target_Image,352,288)';
     
-    % Determine whether we're using half-pel accuracy
-    %if (halfPel == 1)
-    %    anchorFrame = interp2(anchorFrame, 1.5, 'linear');
-    %    targetFrame = interp2(targetFrame, 1.5, 'linear');
-        %figure
-        %imshow(anchorFrame/max(max(anchorFrame)));
-        %title('Anchor Frame');
-        
-    %end
-
+    % Display anchor and target frame
     subplot(2,2,1);
     imshow(anchorFrame/max(max(anchorFrame)));
     title('Anchor Frame');
@@ -47,26 +40,27 @@ function six12(R, halfPel)
     imshow(targetFrame/max(max(targetFrame)));
     title('Target Frame: 0% Done');
     
-    % Perhaps we need to copy that image metadata again
-    predictedFrame = anchorFrame;
-    
     % Get dimensions of frames, ensure equivalent
     [h,w,d] = size(anchorFrame);
-    sprintf('anchor = %d x %d', w, h);
     [h2,w2,d2] = size(targetFrame);
     if ((h2 ~= h) || (w2 ~= w) || (d2 ~= d))
         error 'Video frames have different dimensions (h,w,d)';
     else
-        sprintf('frames are %d x %d x %d', w, h, d)
-        %pause
+        disp(sprintf('frames are %d x %d x %d, or %d x %d blocks', w, h, d, ceil(w/blk_sz), ceil(h/blk_sz)));
     end
+    
+    % Perhaps we need to copy that image metadata again
+    predictedFrame = anchorFrame;
+    predictedFrame(1:h, 1:w, 1:d) = 0;
     
     %%% Assume frame dimensions > given block size
     %%% Assume frame dimensions multiple of given block size
     
     % iteriate across the blocks
-    num_blks_y = (h / blk_sz) - 1;
-    num_blks_x = (w / blk_sz) - 1;
+    % assume 140 px wide, 20 px wide blocks, 7 blocks...
+    % spanning 1:20, 21:40, 41:60, 61:80, 81:100, 101:120, 121:140
+    num_blks_y = (h / blk_sz);
+    num_blks_x = (w / blk_sz);
     
     mv = []; % motion vectors
    
@@ -74,36 +68,51 @@ function six12(R, halfPel)
         
         for blk_x=1:num_blks_x
             
-            % now for given block, search for best match
+            % Convert target block into origin coordinates
             start_y = (blk_y - 1) * 16 + 1;
-            end_y = start_y + blk_sz;
+            end_y = start_y + blk_sz - 1;
             start_x = (blk_x - 1) * 16 + 1;
-            end_x = start_x + blk_sz;
+            end_x = start_x + blk_sz - 1;
             
             % sprintf('start_y = %d, end_y = %d, start_x = %d, end_x = %d', start_y, end_y, start_x, end_x)
             
-            % Init the min error for the MV to infinity...
+            % Init the min error to infinity...
             % any error we actually get will be smaller
             min_error = +inf;
             
             r_y_from = max(start_y - R, 1);
-            r_y_to = min(end_y + R, h - blk_sz);
-            r_x_from = max(start_x - R, 1);
-            r_x_to = min(end_x + R, w - blk_sz);
+            r_y_to = min(start_y + R, h - blk_sz);
             
-            for r_y=r_y_from:r_y_to 
+            r_x_from = max(start_x - R, 1);
+            r_x_to = min(start_x + R, w - blk_sz);
+            
+            for r_y = r_y_from:r_y_to 
            
-                for r_x=r_x_from:r_x_to
+                for r_x = r_x_from:r_x_to
                 
                     % Ok, entire block within bounds
                     % Now compute the error
                     
-                    error_sum = sum(sum( ...
-                        abs( ...
-                            anchorFrame(r_y:r_y+blk_sz, r_x:r_x+blk_sz, 1:d) - ...
-                            targetFrame(start_y:end_y, start_x:end_x, 1:d) ...
-                        ) ...
-                    ));
+                    try
+                        error_sum = sum(sum( ...
+                            abs( ...
+                                anchorFrame(r_y:r_y+blk_sz-1, r_x:r_x+blk_sz-1, 1:d) - ...
+                                targetFrame(start_y:end_y, start_x:end_x, 1:d) ...
+                            ) ...
+                        ));
+                
+                    catch
+                        
+                        size(anchorFrame)
+                    
+                        disp(sprintf('anchorFrame(%d:%d, %d:%d)', r_y, r_y+blk_sz-1, r_x, r_x+blk_sz-1));
+                        disp(sprintf('targetFrame(%d:%d, %d:%d)', start_y, end_y, start_x, end_x));
+                       
+                        error 'oy'
+                    
+                    end
+                    
+                   
                     
                     %sprintf('min_error = %d, sum = %d', min_error, sum)
                     if (error_sum < min_error)
@@ -120,11 +129,11 @@ function six12(R, halfPel)
                 end
             end
             
-            sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
-                blk_x, blk_y, best_r_x, best_r_y, start_x, start_y)
+            disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
+                blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
             
             predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
-                anchorFrame(best_r_y:(best_r_y+blk_sz), best_r_x:(best_r_x+blk_sz), 1:d);
+                anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
             
             
             %predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
