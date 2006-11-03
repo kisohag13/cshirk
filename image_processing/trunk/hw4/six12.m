@@ -62,7 +62,10 @@ function six12(R)
     num_blks_y = (h / blk_sz);
     num_blks_x = (w / blk_sz);
     
-    mv = []; % motion vectors
+    mv_x = []; % init. the motion vectors
+    mv_y = [];
+    offset_y = [];
+    offset_x = [];
    
     for blk_y=1:num_blks_y
         
@@ -136,38 +139,14 @@ function six12(R)
                 anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
             
             
-            %predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
-            %    anchorFrame( ...
-            %        best_r_y:(best_r_y + blk_sz), best_r_x:(best_r_x + blk_sz), 1:d ...
-            %    );
+            % Save motion vectors, make them negative because our
+            % perspective is changing...
+            mv_y(blk_y, blk_x) = -best_del_y;
+            mv_x(blk_y, blk_x) = -best_del_x;
             
-            
-            % Save motion vectors
-            %mv(blk_y, blk_x) = struct('del_x', r_x - start_x, 'del_y', r_y - start_y);
-            
-            %sprintf('blk x,y=(%d,%d)    MV: x,y=(%d,%d)    sum=%d', blk_x, blk_y, blk_mv_x(blk_x), blk_mv_y(blk_y), min_error)
-            
-            %y_off = blk_mv_y(blk_y, blk_x);
-            %x_off = blk_mv_x(blk_y, blk_x);
-            
-            %sprintf('gonna remap: predict(%d:%d,%d:%d) from anchor(%d:%d,%d:%d)', ...
-             %   start_y, end_y, start_x, end_x, start_y + y_off, end_y + y_off, start_x + x_off, end_x + x_off)
-            
-            % We know the best match, so generate a block of the predicted frame
-            
-            
-            
-               %     (start_y + y_off):(end_y + y_off), (start_x + x_off):(end_x + x_off), 1:d ...
-                %);
-           
-            
-            
-            %for j=start_y:end_y
-             %   for i=start_x:end_x
-              %      predictedFrame(j + blk_mv_y(blk_y, blk_x), i + blk_mv_x(blk_y, blk_x), 1:d) = anchorFrame(j, i, 1:d);
-               %     %predictedFrame(j,i,1:d) = anchorFrame(j + blk_mv_y(blk_y, blk_x),i + blk_mv_x(blk_y, blk_x),1:d);
-                %end
-            %end
+            % super lazy
+            offset_y(blk_y, blk_x) = best_r_y + blk_sz/2;
+            offset_x(blk_y, blk_x) = best_r_x + blk_sz/2;
             
         end
         
@@ -193,7 +172,13 @@ function six12(R)
     hold on;
     
     % Plot estimated motion field
-    %subplot(2,2,1);
+    subplot(2,2,1);
+    hold on;
+    tmp_sz = size(mv_y);
+    quiver(offset_x, offset_y, mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
+    title('Est. Anchor Motion field');
+    %axis image;
+    
     %blk_mv_y_sz = size(blk_mv_y);
     % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
     % bottom left
@@ -216,7 +201,6 @@ function six12(R)
     
     psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
     
-    psnr_str = sprintf('psnr = %.2f dB', psnr);
-    psnr_str
-   
+    disp(sprintf('psnr = %.2f dB', psnr));
+    
     
