@@ -1,9 +1,9 @@
-% hw #4, 6.12
+% hw #4, 6.13
 %
 % Chris Shirk (cshirk@ieee.org)
 %
-% Implement EBMA (Exhaustive Block Matching Algorithm) w/
-% block size 16x16 on two frames of video sequence
+% Just like six12., but do half-pel accuracy
+% Yes, I should make it into one program, but I am pressed 4 time
 %
 % Allow user to choose the search range (R)
 %
