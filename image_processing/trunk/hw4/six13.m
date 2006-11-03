@@ -8,18 +8,18 @@
 % Allow user to choose the search range (R)
 %
 
-function six12(R)
+function six13(R)
 
     % Poor usage guide
     if (nargin ~= 1)
-        error 'six12(R) => R: search in px'
+        error 'six13(R) => R: search in px'
     end
 
     % Clear old figure
     close all;
 
     % Hardcoded Block size = 16x16
-    blk_sz = 16; %16; % 16 x 16
+    blk_sz = 16;
 
     %%% Read two video frames in Y format
     fid= fopen('foreman69.Y','r+','n'); 
@@ -32,14 +32,6 @@ function six12(R)
     fclose(fid);
     targetFrame = reshape(Target_Image,352,288)';
     
-    % Display anchor and target frame
-    subplot(2,2,1);
-    imshow(anchorFrame/max(max(anchorFrame)));
-    title('Anchor Frame');
-    subplot(2,2,2);
-    imshow(targetFrame/max(max(targetFrame)));
-    title('Target Frame: 0% Done');
-    
     % Get dimensions of frames, ensure equivalent
     [h,w,d] = size(anchorFrame);
     [h2,w2,d2] = size(targetFrame);
@@ -48,6 +40,18 @@ function six12(R)
     else
         disp(sprintf('frames are %d x %d x %d, or %d x %d blocks', w, h, d, ceil(w/blk_sz), ceil(h/blk_sz)));
     end
+    
+    % Display anchor and target frame
+    subplot(2,2,1);
+    imshow(anchorFrame/max(max(anchorFrame)));
+    title('Anchor Frame');
+    subplot(2,2,2);
+    imshow(targetFrame/max(max(targetFrame)));
+    title('Target Frame: 0% Done');
+    
+    anchorFrame = imresize(anchorFrame, 2);
+    tmp_sz = size(anchorFrame);
+    disp(sprintf('Resized Anchor to %d x %d', tmp_sz(2), tmp_sz(1)));
     
     % Perhaps we need to copy that image metadata again
     predictedFrame = anchorFrame;
@@ -62,19 +66,19 @@ function six12(R)
     num_blks_y = (h / blk_sz);
     num_blks_x = (w / blk_sz);
     
-    mv_x = []; % init. the motion vectors
+    mv_x = []; % Init. the motion vectors
     mv_y = [];
     offset_y = [];
     offset_x = [];
    
+    %%% Iteriate across target frame blocks...
     for blk_y=1:num_blks_y
-        
         for blk_x=1:num_blks_x
             
             % Convert target block into origin coordinates
-            start_y = (blk_y - 1) * 16 + 1;
+            start_y = (blk_y - 1) * blk_sz + 1;
             end_y = start_y + blk_sz - 1;
-            start_x = (blk_x - 1) * 16 + 1;
+            start_x = (blk_x - 1) * blk_sz + 1;
             end_x = start_x + blk_sz - 1;
             
             % sprintf('start_y = %d, end_y = %d, start_x = %d, end_x = %d', start_y, end_y, start_x, end_x)
@@ -83,11 +87,11 @@ function six12(R)
             % any error we actually get will be smaller
             min_error = +inf;
             
-            r_y_from = max(start_y - R, 1);
-            r_y_to = min(start_y + R, h - blk_sz);
+            r_y_from = max(2 * (start_y - R), 1);
+            r_y_to = min(2 * (start_y + R), 2 * (h - blk_sz));
             
-            r_x_from = max(start_x - R, 1);
-            r_x_to = min(start_x + R, w - blk_sz);
+            r_x_from = max(2 * (start_x - R), 1);
+            r_x_to = min(2 * (start_x + R), 2 * (w - blk_sz));
             
             for r_y = r_y_from:r_y_to 
            
@@ -124,8 +128,8 @@ function six12(R)
 
                         best_r_x = r_x;
                         best_r_y = r_y;
-                        best_del_x = r_x - start_x;
-                        best_del_y = r_y - start_y;
+                        best_del_x = r_x - 2 * start_x;
+                        best_del_y = r_y - 2 * start_y;
                         
                     end
                     
@@ -157,6 +161,13 @@ function six12(R)
         
     end
     
+    % Scale motion vectors and predicted image down
+    anchorFrame = imresize(anchorFrame, .5);
+    mv_y = mv_y / 2;
+    mv_x = mv_x / 2;
+    offset_y = offset_y / 2;
+    offste_x = offset_x / 2;
+    
     
     % Plot predicted image
     subplot(2,2,4);
@@ -178,16 +189,6 @@ function six12(R)
     quiver(offset_x, offset_y, mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
     title('Est. Anchor Motion field');
     %axis image;
-    
-    %blk_mv_y_sz = size(blk_mv_y);
-    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
-    % bottom left
-    %quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1, 1:blk_mv_y_sz(2)));
-    %title('Est. motion field, Anchor');
-    %axis image;
-    %axis([0 num_blks_x 0 num_blks_y]);
-    
-    
     
     % Calculate PSNR of predicted frame w.r.t. original anchor frame
     % Actually, no, do it w.r.t. the target frame
