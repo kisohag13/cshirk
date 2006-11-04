@@ -201,6 +201,6 @@ function six12(R)
     
     psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
     
-    disp(sprintf('psnr = %.2f dB', psnr));
+    disp(sprintf('psnr = %.4f dB', psnr));
     
     
