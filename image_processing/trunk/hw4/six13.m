@@ -53,8 +53,8 @@ function six13(R)
     title('Target Frame: 0% Done');
     
     % Perhaps we need to copy that image metadata again
-    predictedFrame = anchorFrame;
-    predictedFrame(1:h, 1:w, 1:d) = 0;
+    predictedFrame = targetFrame;
+    predictedFrame(1:h, 1:w, 1:d) = 0; % tmp hacks
     
     % Double the x,y dimensions of anchor frame so that we can do half-pel
     % search
@@ -75,10 +75,13 @@ function six13(R)
     mv_y = [];
     offset_y = [];
     offset_x = [];
+    
+    % Double search dimensions to account for half-pel search
+    R = 2 * R;
    
     %%% Iteriate across the Target Frame blocks...
-    for blk_y=1:num_blks_y
-        for blk_x=1:num_blks_x
+    for blk_y=1:1:num_blks_y
+        for blk_x=1:1:num_blks_x
             
             % Convert target block into origin coordinates
             start_y = (blk_y - 1) * blk_sz + 1;
@@ -146,8 +149,8 @@ function six13(R)
                 end
             end
             
-            disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
-                blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
+            %disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
+            %    blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
             
             predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
                 anchorFrame(best_r_y:2:(best_r_y+2*blk_sz-1), best_r_x:2:(best_r_x+2*blk_sz-1), 1:d);

@@ -132,8 +132,8 @@ function six12(R)
                 end
             end
             
-            disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
-                blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
+            %disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
+            %    blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
             
             predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
                 anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
@@ -153,6 +153,11 @@ function six12(R)
         subplot(2,2,2);
         percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
         title(percent_done);
+        
+        subplot(2,2,4);
+        imshow(predictedFrame/max(max(predictedFrame)));
+        title('Predicted Image');
+        
         drawnow();
         
     end
