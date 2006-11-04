@@ -58,7 +58,7 @@ function six13(R)
     
     % Double the x,y dimensions of anchor frame so that we can do half-pel
     % search
-    anchorFrame = imresize(anchorFrame, 2);
+    anchorFrame = imresize(anchorFrame, 2, 'bilinear');
     tmp_sz = size(anchorFrame);
     disp(sprintf('Resized Anchor to %d x %d', tmp_sz(2), tmp_sz(1)));
     
@@ -76,9 +76,6 @@ function six13(R)
     offset_y = [];
     offset_x = [];
     
-    % Double search dimensions to account for half-pel search
-    R = 2 * R;
-   
     %%% Iteriate across the Target Frame blocks...
     for blk_y=1:1:num_blks_y
         for blk_x=1:1:num_blks_x

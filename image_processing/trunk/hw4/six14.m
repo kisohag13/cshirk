@@ -1,14 +1,15 @@
-% hw #4, 6.12
+% hw #4, 6.14
 %
 % Chris Shirk (cshirk@ieee.org)
 %
-% Implement EBMA (Exhaustive Block Matching Algorithm) w/
-% block size 16x16 on two frames of video sequence
+% Similar to 6.12, but do spatial interpolation on the motion field
+%
+%
 %
 % Allow user to choose the search range (R)
 %
 
-function six12(R)
+function six14(R)
 
     % Poor usage guide
     if (nargin ~= 1)
@@ -135,21 +136,20 @@ function six12(R)
             %disp(sprintf('blk x,y (%d,%d) -- from anchor x,y (%d,%d) to target x,y (%d,%d)', ...
             %    blk_x, blk_y, best_r_x, best_r_y, start_x, start_y));
             
-            predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
-                anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
+            %%% Don't do calculation of predicted frame here..
+            %%% We have to interpolate the motion field from block space to pixel space
+            %predictedFrame(start_y:end_y, start_x:end_x, 1:d) = ...
+            %    anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
             
             
             % Save motion vectors, make them negative because our
             % perspective is changing...
-            
-            % note... gotta adjust this more
-            
             mv_y(blk_y, blk_x) = -best_del_y;
             mv_x(blk_y, blk_x) = -best_del_x;
             
             % super lazy
-            offset_y(blk_y, blk_x) = best_r_y - best_del_y + blk_sz / 2; %best_r_y + blk_sz/2;
-            offset_x(blk_y, blk_x) = best_r_x - best_del_x + blk_sz / 2; %best_r_x + blk_sz/2;
+            offset_y(blk_y, blk_x) = best_r_y - best_del_y + blk_sz/2;
+            offset_x(blk_y, blk_x) = best_r_x - best_del_x + blk_sz/2;
             
         end
         
@@ -157,13 +157,50 @@ function six12(R)
         percent_done = sprintf('Target Frame; %d %% Done', floor(blk_y * 100 / num_blks_y));
         title(percent_done);
         
-        subplot(2,2,4);
-        imshow(predictedFrame/max(max(predictedFrame)));
-        title('Predicted Image');
-        
         drawnow();
         
     end
+    
+    
+    % Plot estimated motion field
+    subplot(2,2,1);
+    %hold on;
+    tmp_sz = size(mv_y);
+    %quiver(offset_x, offset_y, mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
+    mv_y = mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2));
+    quiver(offset_x, offset_y, mv_x, mv_y);
+    
+    subplot(2,2,2);
+    
+    % To what extent do we scale? 16
+    hmm_mv_x = interp2(mv_x, 1.5);
+    
+    foo = interp2(offset_x, offset_y, 2, mv_x, mv_y, 'linear')
+    
+    
+    
+    
+    quiver(mv_x, mv_y);
+    axis image
+    title('Est. Anchor Motion field');
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     % Plot predicted image
@@ -179,13 +216,18 @@ function six12(R)
     title('Scaled difference image');
     hold on;
     
-    % Plot estimated motion field
-    subplot(2,2,1);
-    hold on;
-    tmp_sz = size(mv_y);
-    quiver(offset_x, offset_y, mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
-    title('Est. Anchor Motion field');
+    
     %axis image;
+    
+    %blk_mv_y_sz = size(blk_mv_y);
+    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
+    % bottom left
+    %quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1, 1:blk_mv_y_sz(2)));
+    %title('Est. motion field, Anchor');
+    %axis image;
+    %axis([0 num_blks_x 0 num_blks_y]);
+    
+    
     
     % Calculate PSNR of predicted frame w.r.t. original anchor frame
     % Actually, no, do it w.r.t. the target frame
