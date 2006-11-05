@@ -11,6 +11,8 @@
 
 function six14(R)
 
+    tic;
+
     % Poor usage guide
     if (nargin ~= 1)
         error 'six12(R) => R: search in px'
@@ -156,30 +158,42 @@ function six14(R)
         
     end
     
+    % From Beser...!
+    for i=1:4
+        [m_Height,m_Width]=size(mv_x);
+        Up_mvfx=zeros(m_Height*2,m_Width*2);
+        Up_mvfx(1:2:m_Height*2,1:2:m_Width*2)=mv_x;
+        Up_mvfx(1:2:m_Height*2-1,2:2:m_Width*2-1)=(mv_x(:,1:m_Width-1)+mv_x(:,2:m_Width))/2;
+        Up_mvfx(2:2:m_Height*2-1,1:2:m_Width*2-1)=(mv_x(1:m_Height-1,:)+mv_x(2:m_Height,:))/2;
+        Up_mvfx(2:2:m_Height*2-1,2:2:m_Width*2-1)= ...
+            (mv_x(1:m_Height-1,1:m_Width-1)+mv_x(1:m_Height-1,2:m_Width)+mv_x(2:m_Height,1:m_Width-1)+mv_x(2:m_Height,2:m_Width))/4;
+        mv_x=Up_mvfx;
+
+        [m_Height,m_Width]=size(mv_y);
+        Up_mvfy=zeros(m_Height*2,m_Width*2);
+        Up_mvfy(1:2:m_Height*2,1:2:m_Width*2)=mv_y;
+        Up_mvfy(1:2:m_Height*2-1,2:2:m_Width*2-1)=(mv_y(:,1:m_Width-1)+mv_y(:,2:m_Width))/2;
+        Up_mvfy(2:2:m_Height*2-1,1:2:m_Width*2-1)=(mv_y(1:m_Height-1,:)+mv_y(2:m_Height,:))/2;
+        Up_mvfy(2:2:m_Height*2-1,2:2:m_Width*2-1)= ...
+            (mv_y(1:m_Height-1,1:m_Width-1)+mv_y(1:m_Height-1,2:m_Width)+mv_y(2:m_Height,1:m_Width-1)+mv_y(2:m_Height,2:m_Width))/4;
+        mv_y=Up_mvfy;
+
+    end
     
-    % Use 'imresize' to interpolate to specific dimensions
     subplot(2,2,1);
-    hold on;
     tmp_sz = size(mv_y);
-    mv_y = mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2));
+    quiver(mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
     
-    resized_mv_y = imresize(mv_y, 16, 'bilinear');
-    resized_mv_x = imresize(mv_x, 16, 'bilinear');
-    
-    quiver(resized_mv_x, resized_mv_y);
     axis image;
+
     
-    tmp = size(resized_mv_x);
-    disp(sprintf('resized_mv_x = %d x %d', tmp(2), tmp(1)));
-    tmp = size(resized_mv_y);
-    disp(sprintf('resized_mv_y = %d x %d', tmp(2), tmp(1)));
     
     % Now plot predicted image with interpolated motion vectors
     for j=1:288
         for i=1:352
             
-            get_x = round(i + resized_mv_x(j, i));
-            get_y = round(j + resized_mv_y(j, i));
+            get_x = round(i + mv_x(j, i));
+            get_y = round(j + mv_y(j, i));
             
             get_x = max(get_x, 1);
             get_y = max(get_y, 1);
@@ -216,5 +230,19 @@ function six14(R)
     title('Scaled difference image');
     hold on;
     
+    % Calculate PSNR of predicted frame w.r.t. original anchor frame
+    % Actually, no, do it w.r.t. the target frame
+    mse = 0;
+    for j=1:h
+        for i=1:w
+            mse = mse + (predictedFrame(j,i,1:d) - targetFrame(j,i,1:d))^2;
+        end
+    end
+    mse = mse / w / h;
     
+    psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
+    
+    disp(sprintf('psnr = %.4f dB', psnr));
+    
+    toc;
     
