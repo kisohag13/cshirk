@@ -10,6 +10,8 @@
 
 function six12(R)
 
+    tic;
+
     % Poor usage guide
     if (nargin ~= 1)
         error 'six12(R) => R: search in px'
@@ -200,5 +202,7 @@ function six12(R)
     psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
     
     disp(sprintf('psnr = %.4f dB', psnr));
+    
+    toc;
     
     

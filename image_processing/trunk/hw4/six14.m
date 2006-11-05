@@ -142,14 +142,9 @@ function six14(R)
             %    anchorFrame(best_r_y:(best_r_y+blk_sz-1), best_r_x:(best_r_x+blk_sz-1), 1:d);
             
             
-            % Save motion vectors, make them negative because our
-            % perspective is changing...
-            mv_y(blk_y, blk_x) = -best_del_y;
-            mv_x(blk_y, blk_x) = -best_del_x;
-            
-            % super lazy
-            offset_y(blk_y, blk_x) = best_r_y - best_del_y + blk_sz/2;
-            offset_x(blk_y, blk_x) = best_r_x - best_del_x + blk_sz/2;
+            % Save motion vectors
+            mv_y(blk_y, blk_x) = best_del_y;
+            mv_x(blk_y, blk_x) = best_del_x;
             
         end
         
@@ -162,51 +157,56 @@ function six14(R)
     end
     
     
-    % Plot estimated motion field
+    % Use 'imresize' to interpolate to specific dimensions
     subplot(2,2,1);
-    %hold on;
+    hold on;
     tmp_sz = size(mv_y);
-    %quiver(offset_x, offset_y, mv_x, mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2)));
     mv_y = mv_y(tmp_sz(1):-1:1, 1:tmp_sz(2));
-    quiver(offset_x, offset_y, mv_x, mv_y);
     
-    subplot(2,2,2);
+    resized_mv_y = imresize(mv_y, 16, 'bilinear');
+    resized_mv_x = imresize(mv_x, 16, 'bilinear');
     
-    % To what extent do we scale? 16
-    hmm_mv_x = interp2(mv_x, 1.5);
+    quiver(resized_mv_x, resized_mv_y);
+    axis image;
     
-    foo = interp2(offset_x, offset_y, 2, mv_x, mv_y, 'linear')
+    tmp = size(resized_mv_x);
+    disp(sprintf('resized_mv_x = %d x %d', tmp(2), tmp(1)));
+    tmp = size(resized_mv_y);
+    disp(sprintf('resized_mv_y = %d x %d', tmp(2), tmp(1)));
     
-    
-    
-    
-    quiver(mv_x, mv_y);
-    axis image
-    title('Est. Anchor Motion field');
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    % Now plot predicted image with interpolated motion vectors
+    for j=1:288
+        for i=1:352
+            
+            get_x = round(i + resized_mv_x(j, i));
+            get_y = round(j + resized_mv_y(j, i));
+            
+            get_x = max(get_x, 1);
+            get_y = max(get_y, 1);
+            
+            get_x = min(get_x, 352);
+            get_y = min(get_y, 288);
+            
+            try
+                
+            predictedFrame(j, i, 1:d) = anchorFrame(get_y, get_x, 1:d);
+            
+            catch
+                
+            disp(sprintf('get_x = %d, get_y = %d', get_x, get_y))
+            error 'oy'
+                
+            end
+            
+            
+        end
+    end
     
     % Plot predicted image
     subplot(2,2,4);
     imshow(predictedFrame/max(max(predictedFrame)));
     title('Predicted Image');
+    
     
     % Plot prediction-error image
     % Scaled difference image: abs(2*(predicted image - target frame)+128) 
@@ -216,31 +216,5 @@ function six14(R)
     title('Scaled difference image');
     hold on;
     
-    
-    %axis image;
-    
-    %blk_mv_y_sz = size(blk_mv_y);
-    % for image, (0,0) is top-left.. but for graphs (quiver), (0,0) is
-    % bottom left
-    %quiver(blk_mv_x, blk_mv_y(blk_mv_y_sz(1):-1:1, 1:blk_mv_y_sz(2)));
-    %title('Est. motion field, Anchor');
-    %axis image;
-    %axis([0 num_blks_x 0 num_blks_y]);
-    
-    
-    
-    % Calculate PSNR of predicted frame w.r.t. original anchor frame
-    % Actually, no, do it w.r.t. the target frame
-    mse = 0;
-    for j=1:h
-        for i=1:w
-            mse = mse + (predictedFrame(j,i,1:d) - targetFrame(j,i,1:d))^2;
-        end
-    end
-    mse = mse / w / h;
-    
-    psnr = 10 * log10((max(max(predictedFrame)))^2 / mse);
-    
-    disp(sprintf('psnr = %.4f dB', psnr));
     
     
