@@ -53,8 +53,7 @@ function six14(R)
     end
     
     % Perhaps we need to copy that image metadata again
-    predictedFrame = anchorFrame;
-    predictedFrame(1:h, 1:w, 1:d) = 0;
+    predictedFrame = targetFrame;
     
     %%% Assume frame dimensions > given block size
     %%% Assume frame dimensions multiple of given block size
@@ -192,26 +191,12 @@ function six14(R)
     for j=1:288
         for i=1:352
             
-            get_x = round(i + mv_x(j, i));
-            get_y = round(j + mv_y(j, i));
+            get_x = i - round(mv_x(j, i));
+            get_y = j - round(mv_y(j, i));
             
-            get_x = max(get_x, 1);
-            get_y = max(get_y, 1);
-            
-            get_x = min(get_x, 352);
-            get_y = min(get_y, 288);
-            
-            try
-                
-            predictedFrame(j, i, 1:d) = anchorFrame(get_y, get_x, 1:d);
-            
-            catch
-                
-            disp(sprintf('get_x = %d, get_y = %d', get_x, get_y))
-            error 'oy'
-                
+            if ((get_x > 0) && (get_x < 353) && (get_y > 0) && (get_y < 289))
+                predictedFrame(get_y, get_x, 1:d) = anchorFrame(j, i, 1:d);
             end
-            
             
         end
     end
