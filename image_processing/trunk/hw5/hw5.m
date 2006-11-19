@@ -38,11 +38,17 @@ function hw5(src_seq)
         
     end
     
-
-
-% sequence_length = 17
-% p(a) = 10/17
-% p(b) = 4/17
-% p(c) = 2/17
-% p(d) = 1/17
-
+    
+    % Need to define regions for each symbol...
+    region_lower('z') = 0; % Implicitly set matrix dimensions
+    region_upper('z') = 0;
+    
+    
+    % Iteriate through source sequence and do the coding
+    % Do the coding by determining if the given bit sequence
+    % we build maps to only one region
+    for i=1:length(src_seq)
+        
+        if (src_seq(i)
+        
+    end
