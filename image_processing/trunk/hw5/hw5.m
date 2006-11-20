@@ -81,5 +81,14 @@ function hw5(src_seq)
         disp(sprintf('Symbol: %c, Interval %.9f .. %.9f', src_seq(i), lower, upper));
     end
     
+    halfway_pt = lower + (upper - lower) / 2
+    bin = num2bin(halfway_pt)
+    
+    % Shift off least significant bits while we are still within the
+    % lower..upper range
+    %while(1)
+        
+    %end
+    
     
     
