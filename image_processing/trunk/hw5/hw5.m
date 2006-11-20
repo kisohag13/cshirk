@@ -7,6 +7,8 @@
 
 function hw5(src_seq)
 
+    format long;
+
     % Detect whether we're overriding the default source sequence
     if (nargin ~= 1)
         disp 'Defaulting to src_seq = aacbaabaabaaaabcd'
@@ -28,27 +30,56 @@ function hw5(src_seq)
     end
     
     % Display alphabet probabilities
-    disp 'Source Symbol Probabilities:'
-    for i=1:length(prob)
+    %disp 'Source Symbol Probabilities:'
+    %for i=1:length(prob)
         
-        if (prob(i) == 0) continue; end
+    %    if (prob(i) == 0) continue; end
         
-        disp(sprintf('%c = %.1f%%', i, prob(i) * 100 / length(src_seq)))
+    %    disp(sprintf('%c = %.1f%%', i, prob(i) * 100 / length(src_seq)))
         
-        
-    end
+    %end
     
     
-    % Need to define regions for each symbol...
+    %%% Need to define regions for each symbol...
     region_lower('z') = 0; % Implicitly set matrix dimensions
     region_upper('z') = 0;
-    
-    
-    % Iteriate through source sequence and do the coding
-    % Do the coding by determining if the given bit sequence
-    % we build maps to only one region
-    for i=1:length(src_seq)
+    last = 0;
+    src_seq_sorted = unique(sort(src_seq));
+    for i=1:length(src_seq_sorted)
         
-        if (src_seq(i)
+        tmp = prob(src_seq_sorted(i)) / length(src_seq);
+        
+        region_lower(src_seq_sorted(i)) = last;
+        region_upper(src_seq_sorted(i)) = last + tmp;
+        last = last + tmp;
         
     end
+    
+    
+    %%% Display regions
+    for i=1:length(src_seq_sorted)
+        disp(sprintf('Symbol: %c = %.2f to %.2f', src_seq_sorted(i), ...
+            region_lower(src_seq_sorted(i)), ...
+            region_upper(src_seq_sorted(i))));
+        
+     
+        
+    end % uniqified symbols
+    
+    
+    %%% Hmm
+    lower = 0;
+    upper = 1;
+    for i=1:length(src_seq)
+        lower_orig = lower;
+        lower = lower_orig + (upper - lower_orig) * region_lower(src_seq(i));
+        upper = lower_orig + (upper - lower_orig) * region_upper(src_seq(i));
+        
+        %upper - lower
+        %region_upper(src_seq(i))
+        
+        disp(sprintf('Symbol: %c, Interval %.9f .. %.9f', src_seq(i), lower, upper));
+    end
+    
+    
+    
