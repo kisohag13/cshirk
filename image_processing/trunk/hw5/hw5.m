@@ -81,14 +81,23 @@ function hw5(src_seq)
         disp(sprintf('Symbol: %c, Interval %.9f .. %.9f', src_seq(i), lower, upper));
     end
     
-    halfway_pt = lower + (upper - lower) / 2
-    bin = num2bin(halfway_pt)
+    halfway_pt = lower + (upper - lower) / 2;
+    disp(sprintf('halfway point for final region = %.9f', halfway_pt));
     
     % Shift off least significant bits while we are still within the
     % lower..upper range
-    %while(1)
+    shift = 1;
+    while(1)
         
-    %end
+        test = floor(halfway_pt * 2^shift) / 2^shift;
+        
+        if (test >= lower) && (test <= upper) break; end
+        
+        shift = shift + 1;
+    end
+    
+    disp 'Sadly, the dotrim argument does not seem to work on this Matlab'
+    disp(sprintf('Dec value = %d\nBinary = %s\nLength = %d (excluding trailing zeros)', test, num2bin(test), shift));
     
     
     
