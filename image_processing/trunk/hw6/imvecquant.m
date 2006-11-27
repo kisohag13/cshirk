@@ -8,7 +8,9 @@ function imvecquant(L)
 close all
 
 global img;
-img = imread('xyz-short-stepper-grayscale.gif');
+%img = imread('xyz-short-stepper-grayscale.gif');
+img = imread('test.gif');
+%img = imread('small.gif');
 
 %imshow(img);
 %pause
@@ -47,7 +49,7 @@ disp(sprintf('Given vector of 4x4 pixels, image is %d blocks x %d blocks', ...
 % Given 4x4 blocks, treat each pixel independentely
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 global codebook;
-codebook = zeros(L, 4, 4); % L codewords of 4x4 grayscale pixels
+codebook = zeros(L, blkSz, blkSz); % L codewords of 4x4 grayscale pixels
 
 L_side = floor(L^.5);
 for i=1:(L_side * L_side) % Define codewords
@@ -68,8 +70,10 @@ for i=1:(L_side * L_side) % Define codewords
     end
 end
 
-pause
-codebook
+%codebook
+
+
+
 
 % Finish initializing
 for i=(L_side * L_side + 1):L
@@ -107,12 +111,31 @@ while (1)
     for i=1:length(codebook)
         
         nReferences = 0;
+        newvec = zeros(blkSz, blkSz);
         
         % Find all 4x4 vectors that reference that code
         for j=1:numVecs
             
+            if (vecLevel(j) == i)
+                nReferences = nReferences + 1;
+                
+                %%%%%%%%%%
+                % Add current reference to newvec
+                x_offset = mod((i - 1) * blkSz, w) + 1;
+                y_offset = floor((i - 1) * blkSz / w) * blkSz + 1;
+                blah(1:blkSz, 1:blkSz) = img(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1);
+                
+                
+                newvec = newvec + double(blah);
+                
+            end
             
-            
+        end % find references
+        
+        if (nReferences ~= 0)
+            newvec = floor(newvec / nReferences);
+            % update codeword
+            codebook(i, 1:blkSz, 1:blkSz) = newvec;
         end
        
         
@@ -123,17 +146,47 @@ while (1)
     % Iteriate through all 4x4 pixel vectors
     % Assign closest code in codebook
     % If assigned code has changed, set bKeepGoing = 1
-    
-    
     bKeepGoing = 0;
     
+    for i=1:numVecs
+        
+        tmp = findClosestCode(i);
+        
+        if (tmp == vecLevel(i))
+        else
+            bKeepGoing = 1;
+            
+            vecLevel(i) = tmp;
+            
+        end
+        
+        
+    end
+    
     if (bKeepGoing == 0) break; end
+    
 end
 
 
 disp(sprintf('nIterations = %d', nIterations));
 
 
+% Show quantized image
+img2 = img;
+for i=1:numVecs
+    
+    x_offset = mod((i - 1) * blkSz, w) + 1;
+    y_offset = floor((i - 1) * blkSz / w) * blkSz + 1;
+    
+    img2(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1) = ...
+        codebook(vecLevel(i), 1:blkSz, 1:blkSz);
+    
+end
+
+imshow(img2);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%
 function [quant_idx] = findClosestCode(i)
 
@@ -145,11 +198,14 @@ function [quant_idx] = findClosestCode(i)
     global w;
     global d;
     
+    double mydiff;
+    
+    
     % for i=100 --> 99 * 4 mod 400 = 
     x_offset = mod((i - 1) * blkSz, w) + 1;
     y_offset = floor((i - 1) * blkSz / w) * blkSz + 1;
     
-    disp(sprintf('for i=%d, x_offset = %d, y_offset = %d', i, x_offset, y_offset));
+    %disp(sprintf('for i=%d, x_offset = %d, y_offset = %d', i, x_offset, y_offset));
     
     mse = +inf;
     quant_idx = 0;
@@ -157,29 +213,37 @@ function [quant_idx] = findClosestCode(i)
     % Find best-fit code
     for j=1:length(codebook)
         
-        tmp = 0;
-        for a=0:(blkSz - 1)
-            for b=0:(blkSz - 1)
+        %img(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1, 1)
+        %codebook(j, 1:blkSz, 1:blkSz)
+        argh(1:blkSz, 1:blkSz) = codebook(j, 1:blkSz, 1:blkSz);
+        blah(1:blkSz, 1:blkSz) = img(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1);
+        
+        mydiff = 0;
+        for a=1:blkSz
+            for b=1:blkSz
                 
-                disp(sprintf(' img(%d,%d)=%d  codebook(%d,%d,%d)=%d', ...
-                   y_offset + a, x_offset + b, img(y_offset + a, x_offset + b, 1), ...
-                  j, a + 1, b + 1, codebook(j, a+1, b+1)));
+                %disp(sprintf('abs = %d, old diff = %d, 
                 
-                
-                
-                foo = (img(y_offset + a, x_offset + b, 1) - codebook(j, a + 1, b + 1))^2;
-                
-                tmp = tmp + foo;
+                %bs(argh(a, b) - blah(a, b))
+                mydiff = mydiff + double(abs(argh(a, b) - blah(a, b)));
+                %mydiff
+                %pause
             end
         end
         
+        tmp = mydiff;
+        %tmp
+        
         %pause
         
-        if (tmp < mse)
+        if ((tmp < mse) && (tmp ~= 0))
+            
+            %disp(sprintf('for i=%d --> mse was %d, now %d, new idx = %d', i, mse, tmp, j));
+            
             mse = tmp;
             quant_idx = j;
         end
         
     end % iteriate across codebook
     
-    disp(sprintf('for i=%d, quant idx = %d, mse = %d', i, quant_idx, mse));
+    %disp(sprintf('for i=%d, quant idx = %d, mse = %d', i, quant_idx, mse));
