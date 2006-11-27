@@ -9,8 +9,8 @@ close all
 
 global img;
 %img = imread('xyz-short-stepper-grayscale.gif');
-img = imread('test.gif');
-%img = imread('small.gif');
+%img = imread('test.gif');
+img = imread('small.gif');
 
 %imshow(img);
 %pause
@@ -98,6 +98,8 @@ for i=1:numVecs
     vecLevel(i) = findClosestCode(i);
 end
 
+vecLevel
+
 
 % Loop until codebook / reassignments stabilize
 nIterations = 0;
@@ -121,9 +123,17 @@ while (1)
                 
                 %%%%%%%%%%
                 % Add current reference to newvec
-                x_offset = mod((i - 1) * blkSz, w) + 1;
-                y_offset = floor((i - 1) * blkSz / w) * blkSz + 1;
+                x_offset = mod((j - 1) * blkSz, w) + 1;
+                y_offset = floor((j - 1) * blkSz / w) * blkSz + 1;
+                try
                 blah(1:blkSz, 1:blkSz) = img(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1);
+                catch
+                    disp(sprintf('img(%d:%d, %d:%d) vs. img(%d, %d)', ...
+                        y_offset, y_offset + blkSz - 1, x_offset, x_offset + blkSz - 1, ...
+                        h, w));
+                        pause
+                        
+                end
                 
                 
                 newvec = newvec + double(blah);
@@ -178,8 +188,10 @@ for i=1:numVecs
     x_offset = mod((i - 1) * blkSz, w) + 1;
     y_offset = floor((i - 1) * blkSz / w) * blkSz + 1;
     
-    img2(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1) = ...
-        codebook(vecLevel(i), 1:blkSz, 1:blkSz);
+    if (vecLevel(i) ~= 0)
+        img2(y_offset:y_offset + blkSz - 1, x_offset:x_offset + blkSz - 1) = ...
+            codebook(vecLevel(i), 1:blkSz, 1:blkSz);
+    end
     
 end
 
@@ -242,6 +254,8 @@ function [quant_idx] = findClosestCode(i)
             
             mse = tmp;
             quant_idx = j;
+        else
+            %quant_idx = 1;
         end
         
     end % iteriate across codebook
